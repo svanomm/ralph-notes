@@ -26,7 +26,7 @@ Given a repository of Markdown documents in `docs/` and research objectives in `
 
 ## Safety Rules
 
-- You must NEVER create note or question files yourself — always use `#tool:runSubagent`
+- You must NEVER create note or question files yourself — always use `#tool:agent`
 - You can ONLY write to `PROGRESS.md` — the sandbox hook enforces this
 - `_index.md` is READ ONLY for you — a PostToolUse hook updates it automatically
 - Terminal commands are BLOCKED — do not attempt them

@@ -32,8 +32,9 @@ $workspaceRoot = $hookInput.cwd
 function Test-WriteAllowed {
     param([string]$FilePath, [string]$Root)
 
-    $fp = $FilePath.ToLower().Replace('/', '\').TrimEnd('\')
-    $wr = $Root.ToLower().Replace('/', '\').TrimEnd('\')
+    # Canonicalize to eliminate .. traversal
+    $fp = [System.IO.Path]::GetFullPath($FilePath).ToLower().Replace('/', '\').TrimEnd('\')
+    $wr = [System.IO.Path]::GetFullPath($Root).ToLower().Replace('/', '\').TrimEnd('\')
 
     # Must be inside the workspace
     if (-not $fp.StartsWith("$wr\")) { return $false }
@@ -52,8 +53,9 @@ function Test-WriteAllowed {
 function Test-ReadAllowed {
     param([string]$FilePath, [string]$Root)
 
-    $fp = $FilePath.ToLower().Replace('/', '\').TrimEnd('\')
-    $wr = $Root.ToLower().Replace('/', '\').TrimEnd('\')
+    # Canonicalize to eliminate .. traversal
+    $fp = [System.IO.Path]::GetFullPath($FilePath).ToLower().Replace('/', '\').TrimEnd('\')
+    $wr = [System.IO.Path]::GetFullPath($Root).ToLower().Replace('/', '\').TrimEnd('\')
 
     # Must be inside the workspace
     return $fp.StartsWith("$wr\") -or $fp -eq $wr
@@ -65,7 +67,10 @@ function Test-ReadAllowed {
 
 $writeTools    = @('create_file', 'replace_string_in_file', 'multi_replace_string_in_file')
 $terminalTools = @('run_in_terminal')
-$readTools     = @('read_file', 'list_dir')
+$readTools     = @('read_file', 'list_dir', 'grep_search', 'file_search', 'semantic_search')
+
+# Tools that are always safe (no file system side-effects)
+$allowedTools  = @('runSubagent', 'manage_todo_list', 'ask_questions', 'get_errors', 'tool_search_tool_regex')
 
 # ---------------------------------------------------------------------------
 # Build response
@@ -127,9 +132,14 @@ if ($writeTools -contains $toolName) {
         $result.hookSpecificOutput.permissionDecision = 'allow'
     }
 
-} else {
-    # ------- EVERYTHING ELSE (search, subagents, etc.) — allow -------
+} elseif ($allowedTools -contains $toolName) {
+    # ------- EXPLICITLY ALLOWED TOOLS (safe, no file-system side-effects) -------
     $result.hookSpecificOutput.permissionDecision = 'allow'
+
+} else {
+    # ------- DENY BY DEFAULT: unknown or dangerous tools -------
+    $result.hookSpecificOutput.permissionDecision       = 'deny'
+    $result.hookSpecificOutput.permissionDecisionReason = "SANDBOX: Tool '$toolName' is not in the allowlist and was denied."
 }
 
 $result | ConvertTo-Json -Depth 5
