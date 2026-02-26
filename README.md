@@ -132,7 +132,9 @@ The orchestrator checks for this file at the start of every iteration and will s
 ralph-notes/
 ├── .github/
 │   ├── agents/
-│   │   └── ralph-orchestrator.agent.md   # Orchestrator agent definition
+│   │   ├── ralph-asker.agent.md           # Asker subagent — generates research questions
+│   │   ├── ralph-doer.agent.md            # Doer subagent — creates atomic notes
+│   │   └── ralph-orchestrator.agent.md    # Orchestrator — dispatches Askers and Doers
 │   ├── hooks/
 │   │   ├── sandbox.json                  # PreToolUse hook config
 │   │   └── indexer.json                  # PostToolUse hook config
@@ -274,7 +276,7 @@ The `parent` field is optional — include it only when a question follows up on
 | Problem | Solution |
 |---------|----------|
 | Hooks not firing | Ensure `chat.agent.hooks.enabled` is `true` in VS Code settings. Requires VS Code ≥ 1.109.3. |
-| Agent not appearing | Check that `.github/agents/ralph-orchestrator.agent.md` exists and VS Code has reloaded. |
+| Agent not appearing | Check that `.github/agents/ralph-orchestrator.agent.md` (and `ralph-asker.agent.md`, `ralph-doer.agent.md`) exist and VS Code has reloaded. |
 | `PLACEHOLDER` not replaced | The PostToolUse hook only fires on `create_file` in `notes/`. Verify the file has valid YAML frontmatter with `type: note` or `type: question`. |
 | Permission denied errors | The sandbox guard is working correctly — it blocks writes outside `notes/` and `PROGRESS.md`. Check the denial reason in the chat. |
 | PowerShell execution policy | The hooks use `-ExecutionPolicy Bypass` so no system-level changes are needed. |

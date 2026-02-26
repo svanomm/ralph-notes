@@ -1,3 +1,5 @@
 {
-  "chat.agent.hooks.enabled": true
+  "chat.agent.hooks.enabled": true,
+  "github.copilot.chat.askQuestions.enabled": false,
+  "github.copilot.chat.cloudAgent.enabled": false
 }

@@ -25,4 +25,7 @@ Ralph Note is an iterative knowledge extraction system. AI agents explore Markdo
 
 ## Note Format
 
-All files in `notes/` must have YAML frontmatter with either `type: note` or `type: question`. See the orchestrator agent definition for full format specifications.
+All files in `notes/` must have YAML frontmatter with either `type: note` or `type: question`. See the agent definitions for full format specifications:
+
+- **`ralph-doer`** — note format (`type: note`)
+- **`ralph-asker`** — question format (`type: question`)
