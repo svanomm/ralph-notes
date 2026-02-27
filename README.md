@@ -31,7 +31,8 @@ Inspired by the [Ralph Wiggum loop technique](https://ghuntley.com/ralph/): an A
         notes/q-*.md    notes/*.md
             │               │
      ┌──────▼───────────────▼──────┐
-     │    PostToolUse Hook         │
+     │   scripts/update_index.py   │
+     │  • Validates frontmatter    │
      │  • Generates unique ID      │
      │  • Sets created timestamp   │
      │  • Updates _index.md        │
@@ -44,13 +45,13 @@ Inspired by the [Ralph Wiggum loop technique](https://ghuntley.com/ralph/): an A
 - **Askers** survey the documents and research objectives, then generate specific, answerable research questions
 - **Doers** pick up an open question, read the source documents, and produce atomic notes that answer it
 
-A **PostToolUse hook** handles all bookkeeping deterministically — ID generation, timestamps, index updates, and question status tracking. The orchestrator and subagents never touch the index directly.
+After creating each file, agents call `scripts/update_index.py` to handle all bookkeeping deterministically — frontmatter validation, ID generation, timestamps, index updates, and question status tracking.
 
 ## Requirements
 
-- **VS Code** 1.109.3 or later (agent hooks support)
-- **GitHub Copilot** extension with chat enabled
-- **Windows** with PowerShell 5.1 (ships with Windows, no admin rights needed)
+- **VS Code** with GitHub Copilot Chat (agent mode)
+- **Python 3.12+** (for the index update script)
+- **[uv](https://docs.astral.sh/uv/)** (for environment management)
 
 ## Quick Start
 
@@ -90,20 +91,11 @@ Edit `research-questions.md` with the questions you want answered:
 - Performance considerations
 ```
 
-### 4. Enable agent hooks
-
-Open VS Code Settings (`Ctrl+Shift+P` → "Preferences: Open Settings (UI)") and enable:
+### 4. Set up the Python environment
 
 ```
-chat.agent.hooks.enabled: true
-```
-
-Or add to your `.vscode/settings.json`:
-
-```json
-{
-  "chat.agent.hooks.enabled": true
-}
+uv venv --python 3.12
+uv pip install -r requirements.txt
 ```
 
 ### 5. Launch the orchestrator
@@ -135,14 +127,13 @@ ralph-notes/
 │   │   ├── ralph-asker.agent.md           # Asker subagent — generates research questions
 │   │   ├── ralph-doer.agent.md            # Doer subagent — creates atomic notes
 │   │   └── ralph-orchestrator.agent.md    # Orchestrator — dispatches Askers and Doers
-│   ├── hooks/
-│   │   ├── sandbox.json                  # PreToolUse hook config
-│   │   └── indexer.json                  # PostToolUse hook config
 │   └── copilot-instructions.md           # Project-wide AI instructions
 ├── docs/                                 # Source documents (READ ONLY)
 ├── notes/                                # Generated notes & questions (WRITE)
 ├── scripts/
-│   └── update-index.ps1                  # Auto-indexing & ID generation
+│   └── update_index.py                   # Frontmatter validation, ID generation & index updates
+├── .venv/                                # Python virtual environment (uv)
+├── requirements.txt                      # Python dependencies (pydantic, pyyaml)
 ├── _index.md                             # Auto-maintained research index
 ├── PROGRESS.md                           # Loop state & iteration history
 └── research-questions.md                 # Human-provided research objectives
@@ -154,22 +145,28 @@ ralph-notes/
 |------|--------|-------------|
 | `docs/` | Read only | Source documents — agents read but never modify |
 | `notes/` | Write | Where all generated notes and questions are created |
-| `_index.md` | Auto-managed | Updated by the PostToolUse hook — never edited directly |
+| `_index.md` | Auto-managed | Updated by `scripts/update_index.py` — never edited directly |
 | `PROGRESS.md` | Orchestrator only | Loop state tracking, written by the orchestrator |
 | `research-questions.md` | Human only | You define the research goals before starting |
-| `scripts/` | Do not modify | Hook scripts that enforce sandboxing and indexing |
+| `scripts/` | Do not modify | Index update script and utilities |
 
-## Sandboxing
+## Index Update Script
 
-### PostToolUse — Index Updater
+Agents call `scripts/update_index.py` after creating each file in `notes/`:
 
-Runs **after** every tool call. Only acts on `create_file` events in `notes/`:
+```
+uv run scripts/update_index.py notes/<filename>.md
+```
 
-1. Parses the YAML frontmatter of the new file
+The script performs these steps:
+
+1. Parses and **validates** the YAML frontmatter using Pydantic models (enforces correct types, required fields, ID formats, and value constraints)
 2. Generates a unique ID with millisecond precision (e.g., `NOTE-20260225-143022-731` or `Q-20260225-143055-412`)
 3. Replaces `id: PLACEHOLDER` and `created: PLACEHOLDER` with real values
 4. Appends an entry to the appropriate table in `_index.md`
 5. If a note references a question via `answers:`, marks that question as "answered" in the index
+
+If validation fails, the script prints a clear error and exits non-zero so the agent can fix the file.
 
 ## Note Format
 
@@ -209,7 +206,7 @@ created: PLACEHOLDER
 
 The `parent` field is optional — include it only when a question follows up on an existing question.
 
-> **Important:** Always use `id: PLACEHOLDER` and `created: PLACEHOLDER` literally. The PostToolUse hook replaces these with real values automatically.
+> **Important:** Always use `id: PLACEHOLDER` and `created: PLACEHOLDER` literally. After creating the file, call `scripts/update_index.py` to assign real values.
 
 ## Research Index
 
@@ -261,12 +258,11 @@ The `parent` field is optional — include it only when a question follows up on
 
 | Problem | Solution |
 |---------|----------|
-| Hooks not firing | Ensure `chat.agent.hooks.enabled` is `true` in VS Code settings. Requires VS Code ≥ 1.109.3. |
 | Agent not appearing | Check that `.github/agents/ralph-orchestrator.agent.md` (and `ralph-asker.agent.md`, `ralph-doer.agent.md`) exist and VS Code has reloaded. |
-| `PLACEHOLDER` not replaced | The PostToolUse hook only fires on `create_file` in `notes/`. Verify the file has valid YAML frontmatter with `type: note` or `type: question`. |
-| Permission denied errors | The sandbox guard is working correctly — it blocks writes outside `notes/` and `PROGRESS.md`. Check the denial reason in the chat. |
-| PowerShell execution policy | The hooks use `-ExecutionPolicy Bypass` so no system-level changes are needed. |
-| Copilot can't create README or other root files | The sandbox hook blocks all writes outside `notes/` and `PROGRESS.md`. Temporarily disable hooks or create the file manually. |
+| `PLACEHOLDER` not replaced | The agent must call `scripts/update_index.py` after creating the file. Check the agent instructions. |
+| Validation error from script | Read the error output — Pydantic reports exactly which field failed and why. Fix the frontmatter and re-run the script. |
+| `ModuleNotFoundError` | Run `uv pip install -r requirements.txt` from the workspace root to install dependencies into `.venv/`. |
+| Script can't find file | Ensure the path is relative to the workspace root (e.g., `./notes/my-note.md`), not an absolute path. |
 
 ## License
 

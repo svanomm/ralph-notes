@@ -1,7 +1,7 @@
 ---
 name: Ralph Orchestrator
 description: "Ralph Note orchestrator — iteratively explores documents and builds a Zettelkasten knowledge base"
-tools: [agent, edit/editFiles, read/readFile, search/fileSearch, view, task]
+tools: [read/readFile, agent, edit/editFiles, search/fileSearch, search/listDirectory]
 model: Claude Haiku 4.5 (copilot)
 ---
 
@@ -22,7 +22,7 @@ Given a repository of Markdown documents in `./docs/` and research objectives in
 | Path | Access | Purpose |
 |------|--------|---------|
 | `./research-questions.md` | read | Human-provided research objectives |
-| `./_index.md` | read | Auto-maintained index of questions & notes (updated by hooks) |
+| `./_index.md` | read | Auto-maintained index of questions & notes (updated by subagents via `update_index.py`) |
 | `./PROGRESS.md` | read/write | Your loop state and iteration history |
 | `./docs/` | read | Source documents |
 | `./notes/` | write (via subagents) | Generated notes and question files |
@@ -30,8 +30,8 @@ Given a repository of Markdown documents in `./docs/` and research objectives in
 ## Safety Rules
 
 - You must NEVER create note or question files yourself — always use `#tool:agent`
-- You can ONLY write to `./PROGRESS.md` — the sandbox hook enforces this
-- `./_index.md` is READ ONLY for you — a PostToolUse hook updates it automatically
+- You can ONLY write to `./PROGRESS.md`
+- `./_index.md` is READ ONLY for you — subagents update it by calling `./scripts/update_index.py`
 - Terminal commands are BLOCKED — do not attempt them
 - If `./PAUSE.md` exists in the workspace root, STOP and tell the user the loop is paused
 
@@ -80,7 +80,7 @@ The subagents have their own agent definitions with full instructions — you on
 
 After the subagent returns:
 
-1. Re-read `./_index.md` (it may have been updated by the PostToolUse hook)
+1. Re-read `./_index.md` (it should have been updated by the subagent calling `update_index.py`)
 2. Check if new questions or notes appeared
 3. If the subagent reported a failure, note it in `./PROGRESS.md`
 

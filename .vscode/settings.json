@@ -1,5 +1,6 @@
 {
-  "chat.agent.hooks.enabled": true,
-  "github.copilot.chat.askQuestions.enabled": false,
-  "github.copilot.chat.cloudAgent.enabled": false
+    "chat.tools.terminal.autoApprove": {
+      "uv run scripts/update_index.py": true,
+      "uv run python ./scripts/update_index.py": true
+    }
 }
