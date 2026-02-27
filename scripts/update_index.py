@@ -123,6 +123,23 @@ def replace_placeholders(text: str, entry_id: str, timestamp: str) -> str:
     return text
 
 
+def rename_to_id(file_path: Path, entry_id: str, entry_type: str) -> Path:
+    """Rename file to {entry_id}.md in the appropriate directory.
+
+    Notes stay in notes/, questions go to notes/questions/.
+    Returns the new file path.
+    """
+    if entry_type == "question":
+        dest_dir = WORKSPACE / "notes" / "questions"
+    else:
+        dest_dir = WORKSPACE / "notes"
+    dest_dir.mkdir(parents=True, exist_ok=True)
+    new_path = dest_dir / f"{entry_id}.md"
+    if file_path.resolve() != new_path.resolve():
+        file_path.rename(new_path)
+    return new_path
+
+
 def update_index(
     index_path: Path,
     entry_type: str,
@@ -130,17 +147,18 @@ def update_index(
     timestamp: str,
     data: dict,
 ) -> None:
-    """Append an entry to the correct table in _index.md."""
+    """Append an entry to the correct table in _index.md, using wikilinks for IDs."""
     content = index_path.read_text(encoding="utf-8")
 
     if entry_type == "question":
-        row = f'| {entry_id} | open | {data["question"]} | {data["source"]} | |'
+        row = f'| [[{entry_id}]] | open | {data["question"]} | {data["source"]} | |'
         content = content.replace(
             "<!-- END QUESTIONS -->", f"{row}\n<!-- END QUESTIONS -->"
         )
     else:
+        answers_link = f'[[{data.get("answers", "")}]]' if data.get("answers") else ""
         row = (
-            f'| {entry_id} | {data["title"]} | {data.get("answers", "")}'
+            f'| [[{entry_id}]] | {data["title"]} | {answers_link}'
             f' | {data["source"]} | {timestamp} |'
         )
         content = content.replace(
@@ -153,7 +171,7 @@ def update_index(
             for i, line in enumerate(lines):
                 if answers in line:
                     lines[i] = line.replace("| open |", "| answered |")
-                    lines[i] = re.sub(r"\|\s*\|$", f"| {entry_id} |", lines[i])
+                    lines[i] = re.sub(r"\|\s*\|$", f"| [[{entry_id}]] |", lines[i])
             content = "\n".join(lines)
 
     content = re.sub(
@@ -210,6 +228,9 @@ def main(argv: list[str] | None = None) -> int:
     updated = replace_placeholders(text, entry_id, timestamp)
     file_path.write_text(updated, encoding="utf-8")
 
+    # Rename file to {ID}.md (questions go to notes/questions/)
+    new_path = rename_to_id(file_path, entry_id, entry.type)
+
     index_path = WORKSPACE / "_index.md"
     if index_path.exists():
         update_index(index_path, entry.type, entry_id, timestamp, raw)
@@ -218,6 +239,7 @@ def main(argv: list[str] | None = None) -> int:
         print("Warning: _index.md not found, skipping index update", file=sys.stderr)
 
     print(f"ID: {entry_id}")
+    print(f"File: {new_path.relative_to(WORKSPACE)}")
     print(f"Created: {timestamp}")
     return 0
 

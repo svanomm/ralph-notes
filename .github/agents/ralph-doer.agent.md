@@ -20,11 +20,12 @@ You have been given a question ID and its text. Find the answer in the source do
 3. Read existing notes in `./notes/` to avoid duplicating known information
 4. Create ONE note file per distinct atomic insight (do not combine unrelated ideas)
 5. Each note MUST follow the exact format below
-6. Files go in `./notes/` with descriptive kebab-case names (e.g., `./notes/binary-search-time-complexity.md`)
+6. Create files in `./notes/` with any temporary name (e.g., `./notes/temp-note.md`). The registration script will **automatically rename** the file to `{ID}.md` (e.g., `NOTE-20260225-143022-001.md`)
 7. You can ONLY write files in `./notes/` — do not modify any other files
-8. **After creating each note file**, register it by running: `uv run ./scripts/update_index.py ./notes/<filename>.md` — this validates the frontmatter, assigns a real ID and timestamp, and updates `./_index.md`
+8. **After creating each note file**, register it by running: `uv run ./scripts/update_index.py ./notes/<filename>.md` — this validates the frontmatter, assigns a real ID and timestamp, renames the file to its ID, and updates `./_index.md`
 9. If the script reports a validation error, fix the file and re-run the script
-10. After creating all notes, report back what you created and which docs you referenced
+10. When referencing other notes in the `## Related` section, use their **file ID** as a wikilink: `[[NOTE-XXXXXXXX-XXXXXX-XXX]]`. Confirm the ID exists in `./_index.md` before referencing it
+11. After creating all notes, report back what you created and which docs you referenced
 
 ## Note File Format
 
@@ -72,6 +73,8 @@ target element entirely, returning a false negative.
 ## Related
 - [[NOTE-20260225-143055-001]] - time complexity analysis of binary search
 ```
+
+**Note:** After running `update_index.py`, your file will be renamed from its temporary name to `NOTE-XXXXXXXX-XXXXXX-XXX.md`. The script prints the final filename.
 
 ## Quality Standards
 

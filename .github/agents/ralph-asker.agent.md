@@ -18,10 +18,10 @@ Review the research objectives, existing questions, existing notes, and source d
 1. Read `./research-questions.md` to understand the high-level research objectives
 2. Read `./_index.md` to see all existing questions (open and answered) and notes
 3. Browse `./docs/` to understand what information is available — use `#tool:search/listDirectory`, `#tool:search/fileSearch`, and `#tool:search/textSearch` to survey content
-4. Read existing notes in `./notes/` to understand what is already known
-5. Create question files in `./notes/` — ONE file per question
-6. You can ONLY write files in `./notes/` — do not modify any other files
-7. **After creating each question file**, register it by running: `uv run ./scripts/update_index.py ./notes/<filename>.md` — this validates the frontmatter, assigns a real ID and timestamp, and updates `./_index.md`
+4. Read existing notes in `./notes/` and questions in `./notes/questions/` to understand what is already known
+5. Create question files in `./notes/questions/` — ONE file per question
+6. You can ONLY write files in `./notes/` and `./notes/questions/` — do not modify any other files
+7. **After creating each question file**, register it by running: `uv run ./scripts/update_index.py ./notes/questions/<filename>.md` — this validates the frontmatter, assigns a real ID and timestamp, renames the file to its ID, and updates `./_index.md`
 8. If the script reports a validation error, fix the file and re-run the script
 9. Generate 3–5 questions per session (quality over quantity)
 10. After creating all questions, report back what you generated and why
@@ -42,7 +42,7 @@ created: PLACEHOLDER
 
 - `parent`: The existing question ID this follows up on. **Omit this field entirely** if the question is a new top-level question derived from the research objectives.
 - `source`: Always `"asker"`
-- Use descriptive kebab-case filenames like `notes/q-how-does-x-handle-errors.md`
+- Create files in `notes/questions/` with any temporary name (e.g., `notes/questions/q-temp.md`). The registration script will **automatically rename** the file to `{ID}.md` (e.g., `Q-20260225-143022-001.md`)
 
 **CRITICAL**: Use `id: PLACEHOLDER` and `created: PLACEHOLDER` exactly as shown. After creating the file, run the `update_index.py` script to assign real values. Do NOT invent your own IDs.
 
