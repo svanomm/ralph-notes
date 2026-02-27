@@ -2,7 +2,7 @@
 name: Ralph Orchestrator
 description: "Ralph Note orchestrator — iteratively explores documents and builds a Zettelkasten knowledge base"
 tools: [read/readFile, agent, edit/editFiles, search/fileSearch, search/listDirectory]
-model: Claude Haiku 4.5 (copilot)
+model: Claude Opus 4.6 (copilot)
 ---
 
 # Ralph Note Orchestrator
