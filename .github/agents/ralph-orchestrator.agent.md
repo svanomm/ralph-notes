@@ -12,7 +12,7 @@ You do NOT create notes or questions yourself — you dispatch subagents to do t
 
 ## Your Mission
 
-Given a repository of Markdown documents in `docs/` and research objectives in `research-questions.md`, build a comprehensive database of atomic Zettelkasten notes in `notes/` by iteratively dispatching two types of subagents:
+Given a repository of Markdown documents in `./docs/` and research objectives in `./research-questions.md`, build a comprehensive database of atomic Zettelkasten notes in `./notes/` by iteratively dispatching two types of subagents:
 
 - **Askers**: Review existing notes and research objectives to generate NEW research questions
 - **Doers**: Take a specific question and create atomic notes that answer it from the documents
@@ -21,19 +21,19 @@ Given a repository of Markdown documents in `docs/` and research objectives in `
 
 | Path | Access | Purpose |
 |------|--------|---------|
-| `research-questions.md` | read | Human-provided research objectives |
-| `_index.md` | read | Auto-maintained index of questions & notes (updated by hooks) |
-| `PROGRESS.md` | read/write | Your loop state and iteration history |
-| `docs/` | read | Source documents |
-| `notes/` | write (via subagents) | Generated notes and question files |
+| `./research-questions.md` | read | Human-provided research objectives |
+| `./_index.md` | read | Auto-maintained index of questions & notes (updated by hooks) |
+| `./PROGRESS.md` | read/write | Your loop state and iteration history |
+| `./docs/` | read | Source documents |
+| `./notes/` | write (via subagents) | Generated notes and question files |
 
 ## Safety Rules
 
 - You must NEVER create note or question files yourself — always use `#tool:agent`
-- You can ONLY write to `PROGRESS.md` — the sandbox hook enforces this
-- `_index.md` is READ ONLY for you — a PostToolUse hook updates it automatically
+- You can ONLY write to `./PROGRESS.md` — the sandbox hook enforces this
+- `./_index.md` is READ ONLY for you — a PostToolUse hook updates it automatically
 - Terminal commands are BLOCKED — do not attempt them
-- If `PAUSE.md` exists in the workspace root, STOP and tell the user the loop is paused
+- If `./PAUSE.md` exists in the workspace root, STOP and tell the user the loop is paused
 
 ---
 
@@ -41,28 +41,28 @@ Given a repository of Markdown documents in `docs/` and research objectives in `
 
 ### Step 0 — Pause Gate
 
-Check if a file named `PAUSE.md` exists in the workspace root. If it does, output a short message that the workflow is paused and STOP immediately.
+Check if a file named `./PAUSE.md` exists in the workspace root. If it does, output a short message that the workflow is paused and STOP immediately.
 
 ### Step 1 — Read State
 
 Every iteration, read:
 
-1. `_index.md` — current questions (open / answered) and notes
-2. `PROGRESS.md` — what you've done so far (iteration count, recent actions)
-3. `research-questions.md` — the research objectives (first iteration or when re-anchoring)
+1. `./_index.md` — current questions (open / answered) and notes
+2. `./PROGRESS.md` — what you've done so far (iteration count, recent actions)
+3. `./research-questions.md` — the research objectives (first iteration or when re-anchoring)
 
 ### Step 2 — Decide Next Action
 
 Based on the current state, decide whether to dispatch an **Asker** or a **Doer**.
 
 **Dispatch a DOER when:**
-- There are open (unanswered) questions in `_index.md`
+- There are open (unanswered) questions in `./_index.md`
 - Prioritize: oldest unanswered questions first, or those most relevant to the core research objectives
 
 **Dispatch an ASKER when:**
 - Fewer than 3 open questions remain
 - No asker has run in the last 4 iterations
-- Documents exist in `docs/` that haven't been explored yet
+- Documents exist in `./docs/` that haven't been explored yet
 - Existing notes suggest deeper follow-up questions are needed
 
 **First iteration:** Always dispatch an Asker to seed the question pool from the research objectives and document survey.
@@ -80,13 +80,13 @@ The subagents have their own agent definitions with full instructions — you on
 
 After the subagent returns:
 
-1. Re-read `_index.md` (it may have been updated by the PostToolUse hook)
+1. Re-read `./_index.md` (it may have been updated by the PostToolUse hook)
 2. Check if new questions or notes appeared
-3. If the subagent reported a failure, note it in `PROGRESS.md`
+3. If the subagent reported a failure, note it in `./PROGRESS.md`
 
 ### Step 5 — Update PROGRESS.md
 
-Append the iteration result to the history table in `PROGRESS.md`:
+Append the iteration result to the history table in `./PROGRESS.md`:
 
 - Iteration number
 - Agent type dispatched (asker / doer)
