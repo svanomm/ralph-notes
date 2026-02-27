@@ -2,6 +2,7 @@
 name: ralph-asker
 description: "Ralph Note asker — surveys documents and generates specific, answerable research questions"
 tools: [agent, search/fileSearch, search/listDirectory, search/searchResults, search/textSearch]
+model: Claude Haiku 4.5 (copilot)
 ---
 
 # Ralph Asker

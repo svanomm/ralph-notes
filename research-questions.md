@@ -4,18 +4,16 @@ Define your research goals here. The Ralph orchestrator and its asker subagents 
 
 ## Primary Questions
 
-1. <!-- e.g., "How does module X handle authentication?" -->
-2. <!-- e.g., "What are the performance bottlenecks in the data pipeline?" -->
-3. <!-- e.g., "How do services A and B communicate?" -->
+1. What does a good regression analysis look like?
+2. What are assumptions underlying panel data linear regression techniques?
+3. How do economists specify and describe difference-in-differences regressions?
 
 ## Areas of Interest
 
-- <!-- e.g., Security implications -->
-- <!-- e.g., Scalability patterns -->
-- <!-- e.g., Error handling strategies -->
-- <!-- e.g., Architectural trade-offs -->
+- Econometrics
+- Statistics
+- Economics
 
 ## Scope Boundaries
 
 - **In scope**: All Markdown documents in `docs/`
-- **Out of scope**: <!-- e.g., third-party dependencies, deployment configs -->

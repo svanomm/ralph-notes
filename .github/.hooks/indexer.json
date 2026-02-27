@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "hooks": {
+    "postToolUse": [
+      {
+        "type": "command",
+        "powershell": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/update-index.ps1",
+        "bash": "bash scripts/update-index.sh",
+        "timeoutSec": 15
+      }
+    ]
+  }
+}

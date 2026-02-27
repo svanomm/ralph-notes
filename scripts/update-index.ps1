@@ -16,12 +16,13 @@ try {
 }
 
 # ---- Fast exit: only process create_file events ----
-if ($hookInput.tool_name -ne 'create_file') {
+if ($hookInput.toolName -ne 'create_file') {
     Write-Output '{}'
     exit 0
 }
 
-$filePath      = $hookInput.tool_input.filePath
+$toolArgs      = try { $hookInput.toolArgs | ConvertFrom-Json } catch { @{} }
+$filePath      = $toolArgs.filePath
 $workspaceRoot = $hookInput.cwd
 
 if (-not $filePath) {
@@ -160,13 +161,6 @@ elseif ($type -eq 'note') {
 
 Set-Content -Path $indexFile -Value $indexContent -NoNewline -Encoding UTF8
 
-# ---- Return context to the agent ----
-$result = @{
-    hookSpecificOutput = @{
-        hookEventName     = 'PostToolUse'
-        additionalContext = $contextMsg
-    }
-}
-
-$result | ConvertTo-Json -Depth 5
+# ---- Exit cleanly (PostToolUse output is ignored by the hook runner) ----
+Write-Output '{}'
 exit 0
