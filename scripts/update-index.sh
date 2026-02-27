@@ -1,179 +1,121 @@
-#!/usr/bin/env bash
-# Ralph Note - Index Updater (PostToolUse Hook)
-# Fires after every tool invocation. Only acts on create_file in notes/.
-#   - Generates timestamp-based IDs (millisecond precision)
-#   - Replaces PLACEHOLDER id and created fields in the new file
-#   - Appends entries to _index.md
-#   - Marks questions as answered when a note references them
+#!/bin/bash
+set -e
 
-export HOOK_INPUT
-HOOK_INPUT=$(cat)
+# PostToolUse hook — updates _index.md after file creation in notes/
+# Reads JSON from stdin describing the completed tool call.
+# Only acts on successful create_file events targeting notes/.
 
-python3 - <<'PYEOF'
-import json, sys, os, re
-from datetime import datetime, timezone
+# --- Dependency check ---
+if ! command -v jq &>/dev/null; then
+  echo "Error: jq is required but not installed" >&2
+  exit 1
+fi
 
-raw = os.environ.get('HOOK_INPUT', '')
+# --- Read JSON input from stdin ---
+INPUT=$(cat)
 
-try:
-    hook_input = json.loads(raw)
-except Exception:
-    print('{}')
-    sys.exit(0)
+# --- Guard: only act on create_file / create events ---
+TOOL_NAME=$(echo "$INPUT" | jq -r '.toolName')
+if [ "$TOOL_NAME" != "create_file" ] && [ "$TOOL_NAME" != "create" ]; then
+  exit 0
+fi
 
-# ---- Fast exit: only process create_file events ----
-if hook_input.get('toolName') != 'create_file':
-    print('{}')
-    sys.exit(0)
+# --- Guard: tool must have succeeded ---
+RESULT_TYPE=$(echo "$INPUT" | jq -r '.toolResult.resultType // empty')
+if [ "$RESULT_TYPE" != "success" ]; then
+  exit 0
+fi
 
-file_path      = json.loads(hook_input.get('toolArgs') or '{}').get('filePath', '')
-workspace_root = hook_input.get('cwd', '')
+# --- Extract file path from toolArgs ---
+TOOL_ARGS=$(echo "$INPUT" | jq -r '.toolArgs')
+FILE_PATH=$(echo "$TOOL_ARGS" | jq -r '.filePath // .path // empty')
 
-if not file_path:
-    print('{}')
-    sys.exit(0)
+if [ -z "$FILE_PATH" ]; then
+  exit 0
+fi
 
-# ---- Only process .md files inside notes/ ----
-fp_norm        = os.path.normpath(file_path).lower()
-notes_dir_norm = os.path.normpath(os.path.join(workspace_root, 'notes')).lower()
+# --- Guard: only act on files in notes/ ---
+if [[ "$FILE_PATH" != */notes/* ]] && [[ "$FILE_PATH" != notes/* ]]; then
+  exit 0
+fi
 
-if not fp_norm.startswith(notes_dir_norm + os.sep):
-    print('{}')
-    sys.exit(0)
+# --- Guard: file must exist on disk ---
+if [ ! -f "$FILE_PATH" ]; then
+  exit 0
+fi
 
-file_name = os.path.basename(file_path)
-if not file_name.endswith('.md') or file_name.startswith('_'):
-    print('{}')
-    sys.exit(0)
+# --- Extract frontmatter from the file ---
+# Frontmatter is everything between the first and second '---' lines
+FRONTMATTER=$(sed -n '/^---$/,/^---$/{/^---$/d;p;}' "$FILE_PATH")
 
-# ---- Read the newly created file ----
-if not os.path.exists(file_path):
-    print('{}')
-    sys.exit(0)
+if [ -z "$FRONTMATTER" ]; then
+  exit 0
+fi
 
-try:
-    with open(file_path, 'r', encoding='utf-8') as f:
-        content = f.read()
-except Exception:
-    print('{}')
-    sys.exit(0)
+# Helper: extract a YAML scalar value by key (strips quotes and whitespace)
+get_field() {
+  echo "$FRONTMATTER" | grep -m1 "^${1}:" | sed "s/^${1}: *//; s/\r//; s/^ *//; s/ *$//; s/^\"//; s/\"$//; s/^'//; s/'$//"
+}
 
-if not content:
-    print('{}')
-    sys.exit(0)
+TYPE=$(get_field "type")
 
-# ---- Parse YAML frontmatter ----
-fm_match = re.search(r'^---\r?\n(.*?)\r?\n---', content, re.DOTALL)
-if not fm_match:
-    print('{}')
-    sys.exit(0)
+# --- Guard: must be a note or question ---
+if [ "$TYPE" != "note" ] && [ "$TYPE" != "question" ]; then
+  exit 0
+fi
 
-frontmatter = fm_match.group(1)
+# --- Generate unique ID and ISO timestamp ---
+DATESTAMP=$(date -u +"%Y%m%d-%H%M%S")
+MILLIS=$(date -u +"%3N" 2>/dev/null)
+if [ "$MILLIS" = "%3N" ] || [ -z "$MILLIS" ]; then
+  MILLIS=$(printf "%03d" $((RANDOM % 1000)))
+fi
+ISO_TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%S.${MILLIS}Z")
 
-# ---- Determine document type ----
-type_match = re.search(r'(?m)^type:\s*"?(\w+)"?\s*$', frontmatter)
-doc_type   = type_match.group(1).lower() if type_match else None
+if [ "$TYPE" = "note" ]; then
+  ID="NOTE-${DATESTAMP}-${MILLIS}"
+else
+  ID="Q-${DATESTAMP}-${MILLIS}"
+fi
 
-if doc_type not in ('note', 'question'):
-    print('{}')
-    sys.exit(0)
+# --- Replace PLACEHOLDERs in the created file ---
+sed -i "s/^id: PLACEHOLDER$/id: ${ID}/" "$FILE_PATH"
+sed -i "s/^created: PLACEHOLDER$/created: ${ISO_TIMESTAMP}/" "$FILE_PATH"
 
-# ---- Skip if file already has a real (non-placeholder) ID ----
-if re.search(r'(?m)^id:\s*"?(NOTE-\d|Q-\d)', frontmatter):
-    print('{}')
-    sys.exit(0)
+# --- Locate _index.md ---
+CWD=$(echo "$INPUT" | jq -r '.cwd')
+INDEX_FILE="${CWD%/}/_index.md"
 
-# ---- Generate timestamp-based ID (millisecond precision) ----
-now               = datetime.now(timezone.utc)
-timestamp         = now.strftime('%Y%m%d-%H%M%S-') + f'{now.microsecond // 1000:03d}'
-created_timestamp = now.strftime('%Y-%m-%dT%H:%M:%S.') + f'{now.microsecond // 1000:03d}Z'
-id_prefix         = 'NOTE' if doc_type == 'note' else 'Q'
-new_id            = f'{id_prefix}-{timestamp}'
+if [ ! -f "$INDEX_FILE" ]; then
+  exit 0
+fi
 
-# ---- Replace PLACEHOLDERs in the file ----
-updated_content = re.sub(
-    r'(?m)^(id:\s*)"?PLACEHOLDER"?\s*$',
-    lambda m: f'{m.group(1)}{new_id}',
-    content
-)
-updated_content = re.sub(
-    r'(?m)^(created:\s*)"?PLACEHOLDER"?\s*$',
-    lambda m: f'{m.group(1)}{created_timestamp}',
-    updated_content
-)
+# --- Append entry to the appropriate table in _index.md ---
+if [ "$TYPE" = "question" ]; then
+  QUESTION=$(get_field "question")
+  SOURCE=$(get_field "source")
 
-with open(file_path, 'w', encoding='utf-8') as f:
-    f.write(updated_content)
+  export ROW="| ${ID} | open | ${QUESTION} | ${SOURCE} | |"
+  awk '/<!-- END QUESTIONS -->/ { print ENVIRON["ROW"] } { print }' \
+    "$INDEX_FILE" > "${INDEX_FILE}.tmp" && mv "${INDEX_FILE}.tmp" "$INDEX_FILE"
 
-# ---- Extract metadata for the index ----
-title_m    = re.search(r'(?m)^title:\s*"([^"]*)"', frontmatter)
-title      = title_m.group(1) if title_m else ''
+elif [ "$TYPE" = "note" ]; then
+  TITLE=$(get_field "title")
+  ANSWERS=$(get_field "answers")
+  SOURCE=$(get_field "source")
 
-question_m = re.search(r'(?m)^question:\s*"([^"]*)"', frontmatter)
-question   = question_m.group(1) if question_m else ''
+  export ROW="| ${ID} | ${TITLE} | ${ANSWERS} | ${SOURCE} | ${ISO_TIMESTAMP} |"
+  awk '/<!-- END NOTES -->/ { print ENVIRON["ROW"] } { print }' \
+    "$INDEX_FILE" > "${INDEX_FILE}.tmp" && mv "${INDEX_FILE}.tmp" "$INDEX_FILE"
 
-answers_m  = re.search(r'(?m)^answers:\s*"?([A-Za-z0-9\-]+)"?\s*$', frontmatter)
-answers    = answers_m.group(1) if answers_m else ''
+  # If this note answers a question, mark that question as answered
+  if [ -n "$ANSWERS" ]; then
+    sed -i "/${ANSWERS}/ s/| open |/| answered |/" "$INDEX_FILE"
+    sed -i "/${ANSWERS}/ s/| *|$/| ${ID} |/" "$INDEX_FILE"
+  fi
+fi
 
-source_m   = re.search(r'(?m)^source:\s*"([^"]*)"', frontmatter)
-source     = source_m.group(1) if source_m else ''
+# --- Update the "Last Updated" timestamp ---
+sed -i "s/^Last Updated:.*$/Last Updated: ${ISO_TIMESTAMP}/" "$INDEX_FILE"
 
-parent_m   = re.search(r'(?m)^parent:\s*"?([A-Za-z0-9\-]+)"?\s*$', frontmatter)
-parent     = parent_m.group(1) if parent_m else ''
-
-# ---- Ensure _index.md exists ----
-index_file = os.path.join(workspace_root, '_index.md')
-
-if not os.path.exists(index_file):
-    index_template = (
-        "# Research Index\n\n"
-        f"Last Updated: {created_timestamp}\n\n"
-        "## Questions\n\n"
-        "| ID | Status | Question | Source | Answered By |\n"
-        "|----|--------|----------|--------|-------------|\n"
-        "<!-- END QUESTIONS -->\n\n"
-        "## Notes\n\n"
-        "| ID | Title | Answers | Source Doc | Created |\n"
-        "|----|-------|---------|-----------|---------|\n"
-        "<!-- END NOTES -->\n"
-    )
-    with open(index_file, 'w', encoding='utf-8') as f:
-        f.write(index_template)
-
-with open(index_file, 'r', encoding='utf-8') as f:
-    index_content = f.read()
-
-# ---- Update "Last Updated" timestamp ----
-index_content = re.sub(r'(?m)^Last Updated:.*$', f'Last Updated: {created_timestamp}', index_content)
-
-# ---- Append entry to the correct table ----
-context_msg = ''
-
-if doc_type == 'question':
-    source_info   = f'followup:{parent}' if parent else 'asker'
-    new_row       = f'| {new_id} | open | {question} | {source_info} | |'
-    index_content = index_content.replace('<!-- END QUESTIONS -->', f'{new_row}\n<!-- END QUESTIONS -->')
-    context_msg   = f'[Ralph Hook] New question indexed as {new_id}. Added to _index.md.'
-
-elif doc_type == 'note':
-    new_row       = f'| {new_id} | {title} | {answers} | {source} | {created_timestamp} |'
-    index_content = index_content.replace('<!-- END NOTES -->', f'{new_row}\n<!-- END NOTES -->')
-    context_msg   = f'[Ralph Hook] Note indexed as {new_id}.'
-
-    # If this note answers a question, mark the question as answered
-    if answers:
-        escaped_id    = re.escape(answers)
-        index_content = re.sub(
-            rf'(\| {escaped_id} \| )open( \|)',
-            r'\1answered\2',
-            index_content
-        )
-        context_msg += f' Question {answers} marked as answered.'
-
-with open(index_file, 'w', encoding='utf-8') as f:
-    f.write(index_content)
-
-# ---- Exit cleanly (PostToolUse output is ignored by the hook runner) ----
-print('{}')
-sys.exit(0)
-PYEOF
+exit 0

@@ -142,7 +142,6 @@ ralph-notes/
 ├── docs/                                 # Source documents (READ ONLY)
 ├── notes/                                # Generated notes & questions (WRITE)
 ├── scripts/
-│   ├── sandbox-guard.ps1                 # File access enforcement
 │   └── update-index.ps1                  # Auto-indexing & ID generation
 ├── _index.md                             # Auto-maintained research index
 ├── PROGRESS.md                           # Loop state & iteration history
@@ -161,19 +160,6 @@ ralph-notes/
 | `scripts/` | Do not modify | Hook scripts that enforce sandboxing and indexing |
 
 ## Sandboxing
-
-Security is enforced by two agent hooks that run automatically on every tool invocation:
-
-### PreToolUse — Sandbox Guard
-
-Runs **before** every tool call. Enforces:
-
-- **Write tools** (`create_file`, `replace_string_in_file`, `multi_replace_string_in_file`): Only allowed to `notes/` and `PROGRESS.md`
-- **Terminal commands** (`run_in_terminal`): Always blocked
-- **Read tools** (`read_file`, `list_dir`): Must be within the workspace
-- **Everything else** (search, subagent dispatch, etc.): Allowed
-
-Any denied action returns a reason to the agent and prevents execution.
 
 ### PostToolUse — Index Updater
 
