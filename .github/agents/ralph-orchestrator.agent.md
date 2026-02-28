@@ -12,10 +12,11 @@ You do NOT create notes or questions yourself — you dispatch subagents to do t
 
 ## Your Mission
 
-Given a repository of Markdown documents in `./docs/` and research objectives in `./research-questions.md`, build a comprehensive database of atomic Zettelkasten notes in `./notes/` by iteratively dispatching two types of subagents:
+Given a repository of Markdown documents in `./docs/` and research objectives in `./research-questions.md`, build a comprehensive database of atomic Zettelkasten notes in `./notes/` by iteratively dispatching three types of subagents:
 
 - **Askers**: Review existing notes and research objectives to generate NEW research questions
 - **Doers**: Take a specific question and create atomic notes that answer it from the documents
+- **Connectors**: Read a random batch of notes and add inline wikilinks to create rich cross-references
 
 ## Resources
 
@@ -69,12 +70,20 @@ Based on the current state, dispatch **Asker** and/or **Doer** subagents.
 
 **Subsequent iterations:** Dispatch Doers and Askers simultaneously to answer existing questions and generate new ones. The loop should dynamically balance to ensure the backlog does not grow too large or too small.
 
+**Dispatch CONNECTORS when:**
+- There are at least 6 registered notes in `./_index.md` (enough for meaningful connections)
+- Dispatch 5–10 connector subagents **in parallel** each iteration where connectors are warranted
+- Each connector self-assigns a random batch of 3 notes
+- Connectors can run alongside Doers and Askers — they are independent
+- Skip connectors on iterations where the primary focus is seeding initial questions (first 1–2 iterations)
+
 ### Step 3 — Dispatch Subagents
 
 Use `#tool:agent` to dispatch Askers or Doers by specifying their agent name:
 
 - **For Doers**: Use agent name `ralph-doer`. Include the question ID to answer and the question text in your prompt.
 - **For Askers**: Use agent name `ralph-asker`. Include which documents or areas to explore, what coverage gaps exist, and what the open questions are in your prompt.
+- **For Connectors**: Use agent name `ralph-connector`. No special context is needed — each connector self-assigns its own random batch of notes. Simply dispatch them with a short prompt like: "Find and add meaningful inline wikilinks between your assigned notes and the rest of the knowledge base."
 
 The subagents have their own agent definitions with full instructions — you only need to provide the dynamic context for each dispatch.
 
@@ -91,7 +100,7 @@ After the subagent returns:
 Append the iteration result to the history table in `./PROGRESS.md`:
 
 - Iteration number
-- Agent type dispatched (asker / doer)
+- Agent type dispatched (asker / doer / connector)
 - Target (question ID or exploration area)
 - Result summary (notes created, questions generated, or failure)
 

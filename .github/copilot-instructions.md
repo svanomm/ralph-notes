@@ -31,3 +31,4 @@ All files in `notes/` must have YAML frontmatter with either `type: note` or `ty
 
 - **`ralph-doer`** — note format (`type: note`)
 - **`ralph-asker`** — question format (`type: question`)
+- **`ralph-connector`** — edits existing notes to add inline `[[NOTE-ID]]` wikilinks (does not create files)
