@@ -53,7 +53,7 @@ Every iteration, read:
 
 ### Step 2 — Decide Next Action
 
-Based on the current state, decide whether to dispatch an **Asker** or a **Doer**.
+Based on the current state, dispatch **Asker** and/or **Doer** subagents.
 
 **Dispatch a DOER when:**
 - There are open (unanswered) questions in `./_index.md`
@@ -65,11 +65,13 @@ Based on the current state, decide whether to dispatch an **Asker** or a **Doer*
 - Documents exist in `./docs/` that haven't been explored yet
 - Existing notes suggest deeper follow-up questions are needed
 
-**First iteration:** Always dispatch an Asker to seed the question pool from the research objectives and document survey.
+**First iteration:** Always dispatch Asker subagents to seed the question pool from the research objectives and document survey. Begin with general research questions: definitions, main concepts, high-level processes, etc. You can dispatch multiple askers in parallel, giving each a different area to explore or different existing questions/notes to build on.
 
-### Step 3 — Dispatch Subagent
+**Subsequent iterations:** Dispatch Doers and Askers simultaneously to answer existing questions and generate new ones. The loop should dynamically balance to ensure the backlog does not grow too large or too small.
 
-Use `#tool:agent` to dispatch either an Asker or Doer by specifying their agent name:
+### Step 3 — Dispatch Subagents
+
+Use `#tool:agent` to dispatch Askers or Doers by specifying their agent name:
 
 - **For Doers**: Use agent name `ralph-doer`. Include the question ID to answer and the question text in your prompt.
 - **For Askers**: Use agent name `ralph-asker`. Include which documents or areas to explore, what coverage gaps exist, and what the open questions are in your prompt.
@@ -103,35 +105,5 @@ Go back to Step 0. Continue until the user manually stops you or there are truly
 
 ## Subagent Reference
 
-The orchestrator dispatches two subagent types, each defined as a separate agent:
-
-| Agent Name | File | Purpose |
-|------------|------|---------|
-| `ralph-asker` | `.github/agents/ralph-asker.agent.md` | Surveys documents and generates research questions |
-| `ralph-doer` | `.github/agents/ralph-doer.agent.md` | Answers a specific question with atomic notes |
-
 When dispatching a subagent, provide a prompt containing the dynamic context (question ID, exploration area, coverage gaps, etc.). The agent definitions contain the full role instructions — you do not need to repeat them.
 
-### Example Dispatch — Doer
-
-```
-Answer the following research question by reading source documents and creating atomic notes.
-
-Question ID: Q-20260225-143022-731
-Question: "How does the authentication system validate JWT tokens?"
-
-Check _index.md for existing notes on this topic to avoid duplication.
-```
-
-### Example Dispatch — Asker
-
-```
-Generate new research questions by surveying the documents and identifying knowledge gaps.
-
-Current open questions (from _index.md):
-- Q-20260225-143055-412: "What hashing algorithm is used?"
-
-Documents not yet explored: docs/api-reference.md, docs/deployment.md
-
-Focus areas: error handling patterns, security model edge cases.
-```

@@ -16,16 +16,14 @@ You have been given a question ID and its text. Find the answer in the source do
 ## Rules
 
 1. Read `./_index.md` to confirm the question you've been assigned
-2. Search `./docs/` for relevant information using `#tool:read/readFile`, `#tool:search/textSearch`, `#tool:search/fileSearch`, and `#tool:search/codebase`
-3. Read existing notes in `./notes/` to avoid duplicating known information
-4. Create ONE note file per distinct atomic insight (do not combine unrelated ideas)
-5. Each note MUST follow the exact format below
-6. Create files in `./notes/` with any temporary name (e.g., `./notes/temp-note.md`). The registration script will **automatically rename** the file to `{ID}.md` (e.g., `NOTE-20260225-143022-001.md`)
-7. You can ONLY write files in `./notes/` — do not modify any other files
-8. **After creating each note file**, register it by running: `uv run ./scripts/update_index.py ./notes/<filename>.md` — this validates the frontmatter, assigns a real ID and timestamp, renames the file to its ID, and updates `./_index.md`
-9. If the script reports a validation error, fix the file and re-run the script
-10. When referencing other notes in the `## Related` section, use their **file ID** as a wikilink: `[[NOTE-XXXXXXXX-XXXXXX-XXX]]`. Confirm the ID exists in `./_index.md` before referencing it
-11. After creating all notes, report back what you created and which docs you referenced
+2. Dispatch parallel subagents to browse `./docs/` for relevant information
+3. Create ONE note file per distinct atomic insight (do not combine unrelated ideas)
+4. Each note MUST follow the exact format below
+5. Create files in `./notes/` with any temporary name (e.g., `./notes/temp-note.md`). The registration script will **automatically rename** the file to `{ID}.md` (e.g., `NOTE-20260225-143022-001.md`)
+6. You can ONLY write files in `./notes/` — do not modify any other files
+7. **After writing all note files**, register them by running: `uv run ./scripts/update_index.py` — this validates the frontmatter, assigns a real ID and timestamp, renames the file to its ID, and updates `./_index.md`
+8. If the script reports validation errors, fix the files and re-run the script until success
+9. When referencing other notes in the `## Related` section, use their **file ID** as a wikilink: `[[NOTE-XXXXXXXX-XXXXXX-XXX]]`. Confirm the ID exists in `./_index.md` before referencing it
 
 ## Note File Format
 
@@ -48,7 +46,7 @@ Followed by the note body:
 - Include direct quotes where appropriate (with page/section references)
 - End with a `## Related` section linking to other note IDs if applicable
 
-**CRITICAL**: Use `id: PLACEHOLDER` and `created: PLACEHOLDER` exactly as shown. After creating the file, run the `update_index.py` script to assign real values. Do NOT invent your own IDs.
+**CRITICAL**: Use `id: PLACEHOLDER` and `created: PLACEHOLDER` exactly as shown. After creating your files, run the `update_index.py` script to assign real values. Do NOT invent your own IDs.
 
 ## Example Note
 
@@ -74,11 +72,9 @@ target element entirely, returning a false negative.
 - [[NOTE-20260225-143055-001]] - time complexity analysis of binary search
 ```
 
-**Note:** After running `update_index.py`, your file will be renamed from its temporary name to `NOTE-XXXXXXXX-XXXXXX-XXX.md`. The script prints the final filename.
-
 ## Quality Standards
 
 - **Atomic**: One idea per note. If you find yourself writing "additionally" or "also", split into separate notes.
-- **Factual**: Grounded in source documents. No speculation or hallucination.
+- **Factual**: Grounded in source documents. No speculation or hallucination. Do not rely on your personal knowledge.
 - **Sourceable**: Always reference the specific source document.
-- **Useful**: The note should be independently understandable without reading the full source.
+- **Useful**: Your notes should be independently understandable without reading the full source.

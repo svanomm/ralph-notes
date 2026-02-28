@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
-"""Register a new note or question in the Ralph Note index.
+"""Register new notes and questions in the Ralph Note index.
 
-Called by agents after creating a file in notes/. Validates frontmatter,
-generates a unique ID and timestamp, and updates _index.md.
+Scans notes/ and notes/questions/ for files that haven't been registered
+(i.e. filenames that don't match the ID format), validates frontmatter,
+generates unique IDs and timestamps, and updates _index.md.
 
 Usage:
-    python scripts/update_index.py <file_path>
+    python scripts/update_index.py
 """
 
 from __future__ import annotations
@@ -183,52 +184,57 @@ def update_index(
     index_path.write_text(content, encoding="utf-8")
 
 
+# ── Scanner ──────────────────────────────────────────────────────────
+
+_NOTE_ID_RE = re.compile(r"^NOTE-\d{8}-\d{6}-\d{3}\.md$")
+_QUESTION_ID_RE = re.compile(r"^Q-\d{8}-\d{6}-\d{3}\.md$")
+
+
+def find_unregistered_files() -> list[Path]:
+    """Return .md files in notes/ and notes/questions/ that don't match the ID format."""
+    notes_dir = WORKSPACE / "notes"
+    questions_dir = WORKSPACE / "notes" / "questions"
+    unregistered: list[Path] = []
+
+    # Scan top-level notes/ (non-recursive, skip questions/ subdir)
+    if notes_dir.exists():
+        for f in notes_dir.iterdir():
+            if f.is_file() and f.suffix == ".md" and not _NOTE_ID_RE.match(f.name):
+                unregistered.append(f)
+
+    # Scan notes/questions/
+    if questions_dir.exists():
+        for f in questions_dir.iterdir():
+            if f.is_file() and f.suffix == ".md" and not _QUESTION_ID_RE.match(f.name):
+                unregistered.append(f)
+
+    return sorted(unregistered)
+
+
 # ── CLI ──────────────────────────────────────────────────────────────
 
 
-def main(argv: list[str] | None = None) -> int:
-    args = argv if argv is not None else sys.argv[1:]
-
-    if len(args) != 1:
-        print("Usage: uv python scripts/update_index.py <file_path>", file=sys.stderr)
-        return 1
-
-    file_path = Path(args[0])
-    if not file_path.is_absolute():
-        file_path = WORKSPACE / file_path
-
-    if not file_path.exists():
-        print(f"Error: file not found: {file_path}", file=sys.stderr)
-        return 1
-
-    # Guard: file must be inside notes/
-    notes_dir = WORKSPACE / "notes"
-    try:
-        file_path.resolve().relative_to(notes_dir.resolve())
-    except ValueError:
-        print(f"Error: file must be inside notes/: {file_path}", file=sys.stderr)
-        return 1
-
+def process_file(file_path: Path) -> tuple[str, Path, str] | None:
+    """Validate, assign ID, rename, and return (entry_id, new_path, timestamp) or None on error."""
     text = file_path.read_text(encoding="utf-8")
 
     try:
         raw = parse_frontmatter(text)
     except ValueError as exc:
-        print(f"Error: {exc}", file=sys.stderr)
-        return 1
+        print(f"Error in {file_path.name}: {exc}", file=sys.stderr)
+        return None
 
     try:
         entry = _validate(raw)
     except Exception as exc:
-        print(f"Validation error:\n{exc}", file=sys.stderr)
-        return 1
+        print(f"Validation error in {file_path.name}:\n{exc}", file=sys.stderr)
+        return None
 
     entry_id, timestamp = generate_id_and_timestamp(entry.type)
 
     updated = replace_placeholders(text, entry_id, timestamp)
     file_path.write_text(updated, encoding="utf-8")
 
-    # Rename file to {ID}.md (questions go to notes/questions/)
     new_path = rename_to_id(file_path, entry_id, entry.type)
 
     index_path = WORKSPACE / "_index.md"
@@ -241,7 +247,25 @@ def main(argv: list[str] | None = None) -> int:
     print(f"ID: {entry_id}")
     print(f"File: {new_path.relative_to(WORKSPACE)}")
     print(f"Created: {timestamp}")
-    return 0
+    return entry_id, new_path, timestamp
+
+
+def main() -> int:
+    files = find_unregistered_files()
+    if not files:
+        print("No unregistered notes found.")
+        return 0
+
+    print(f"Found {len(files)} unregistered file(s).")
+    errors = 0
+    for file_path in files:
+        result = process_file(file_path)
+        if result is None:
+            errors += 1
+
+    registered = len(files) - errors
+    print(f"\nDone: {registered} registered, {errors} error(s).")
+    return 1 if errors else 0
 
 
 if __name__ == "__main__":
