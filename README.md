@@ -4,11 +4,13 @@ An iterative knowledge extraction system powered by VS Code Copilot agents. Ralp
 
 Inspired by the [Ralph Wiggum loop technique](https://ghuntley.com/ralph/): an AI orchestrator dispatches disposable subagents to explore source material, generate research questions, and distill findings into atomic notes. Each subagent starts with a fresh context window, avoiding the bloat that kills long-running AI sessions.
 
+**Warning**: Please use this tool at your own risk. I highly recommend implementing a sandbox to prevent agents from behaving badly. I personally use [Docker Sandboxes](https://docs.docker.com/ai/sandboxes/agents/copilot/) to ensure agents cannot interact with files outside of the repo.
+
 ## How It Works
 
 ```
 ┌─────────────────────────────────────────────────────┐
-│                 Ralph Orchestrator                   │
+│                 Ralph Orchestrator                  │
 │                                                     │
 │  1. Check PAUSE.md (stop if exists)                 │
 │  2. Read state (_index.md, PROGRESS.md)             │
@@ -46,6 +48,8 @@ Inspired by the [Ralph Wiggum loop technique](https://ghuntley.com/ralph/): an A
 - **Doers** pick up an open question, read the source documents, and produce atomic notes that answer it
 - **Connectors** read a random batch of existing notes, find conceptual relationships, and weave inline `[[wikilinks]]` to create a densely connected knowledge graph
 
+All subagent types are able to run as parallel fleets of subagents, allowing for generation of large note databases.
+
 After creating each file, Askers and Doers call `scripts/update_index.py` to handle all bookkeeping deterministically — frontmatter validation, ID generation, timestamps, index updates, and question status tracking. Connectors only edit existing notes and do not create new files.
 
 ## Requirements
@@ -65,7 +69,7 @@ cd ralph-notes
 
 ### 2. Add your source documents
 
-Place Markdown files in the `docs/` folder:
+Place Markdown files in the `docs/` folder. NOTE: future versions will convert other filetypes to Markdown for you.
 
 ```
 docs/
@@ -165,7 +169,7 @@ ralph-notes/
 
 ## Index Update Script
 
-Agents call `scripts/update_index.py` after creating each file in `notes/`:
+Agents call `scripts/update_index.py` after creating files:
 
 ```
 uv run scripts/update_index.py notes/<filename>.md
@@ -216,10 +220,6 @@ status: open
 created: PLACEHOLDER
 ---
 ```
-
-The `parent` field is optional — include it only when a question follows up on an existing question.
-
-> **Important:** Always use `id: PLACEHOLDER` and `created: PLACEHOLDER` literally. After creating the file, call `scripts/update_index.py` to assign real values.
 
 ## Research Index
 
@@ -296,4 +296,4 @@ Previous archives are kept in `archives/` (e.g., `archives/ralph_notes_archive_2
 
 ## License
 
-This project is provided as-is for personal and educational use.
+MIT license. Be careful about using this; I make no attempt to confirm whether it adheres to AI provider terms of use.
