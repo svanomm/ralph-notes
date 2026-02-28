@@ -80,7 +80,21 @@ docs/
 
 ### 3. Define your research objectives
 
-Edit `research-questions.md` with the questions you want answered:
+You can define your research objectives in two ways:
+
+**Option A — Use the research-planner skill (recommended)**
+
+Open GitHub Copilot Chat and type:
+
+```
+Plan my research
+```
+
+The `research-planner` skill will interview you — starting with broad questions about purpose and context, then narrowing to specific hypotheses and scope boundaries. After a short back-and-forth, it writes a complete `research-questions.md` tailored to your goals and the documents in `docs/`.
+
+**Option B — Edit `research-questions.md` directly**
+
+Open `research-questions.md` and fill in your questions manually:
 
 ```markdown
 ## Primary Questions
