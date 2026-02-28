@@ -10,10 +10,12 @@ Also validates that each file is named using its frontmatter ID
 
 Usage:
     python scripts/validate_references.py
+    python scripts/validate_references.py --fix   # remove broken wikilinks
 """
 
 from __future__ import annotations
 
+import argparse
 import re
 import sys
 from pathlib import Path
@@ -45,7 +47,29 @@ def collect_files() -> list[Path]:
     return sorted(NOTES_DIR.rglob("*.md"))
 
 
+def fix_broken_references(files: list[Path], id_to_file: dict[str, Path]) -> int:
+    """Remove wikilinks that reference non-existent IDs. Returns count of fixes."""
+    fixed = 0
+    for fpath in files:
+        text = fpath.read_text(encoding="utf-8")
+        def _replace(m: re.Match) -> str:
+            nonlocal fixed
+            ref_id = m.group(1)
+            if ref_id not in id_to_file:
+                fixed += 1
+                return ""  # remove the broken wikilink
+            return m.group(0)
+        new_text = WIKILINK_RE.sub(_replace, text)
+        if new_text != text:
+            fpath.write_text(new_text, encoding="utf-8")
+    return fixed
+
+
 def main() -> int:
+    parser = argparse.ArgumentParser(description="Validate wikilink references in Ralph Note files.")
+    parser.add_argument("--fix", action="store_true", help="Remove broken wikilink references")
+    args = parser.parse_args()
+
     files = collect_files()
     if not files:
         print("No note files found in notes/")
@@ -119,10 +143,15 @@ def main() -> int:
 
     if ref_errors:
         has_errors = True
-        print(f"Broken references ({len(ref_errors)}):")
-        for e in ref_errors:
-            print(e)
-        print()
+        if args.fix:
+            count = fix_broken_references(files, id_to_file)
+            print(f"Fixed {count} broken reference(s).")
+            print()
+        else:
+            print(f"Broken references ({len(ref_errors)}):")
+            for e in ref_errors:
+                print(e)
+            print()
 
     if not has_errors:
         print(f"All clear: {len(id_to_file)} files validated, "

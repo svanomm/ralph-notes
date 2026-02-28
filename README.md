@@ -118,6 +118,16 @@ echo. > PAUSE.md
 
 The orchestrator checks for this file at the start of every iteration and will stop gracefully. Delete it to resume.
 
+### 7. Start fresh
+
+To archive all current notes, questions, and state, then reset the workspace for a new research session:
+
+```
+uv run scripts/fresh_start.py
+```
+
+This creates a timestamped zip archive in `archives/`, clears all files from `notes/`, and resets `_index.md`, `PROGRESS.md`, and `research-questions.md` to blank templates. Your source documents in `docs/` are never touched.
+
 ## Project Structure
 
 ```
@@ -131,7 +141,8 @@ ralph-notes/
 ├── docs/                                 # Source documents (READ ONLY)
 ├── notes/                                # Generated notes & questions (WRITE)
 ├── scripts/
-│   └── update_index.py                   # Frontmatter validation, ID generation & index updates
+│   ├── update_index.py                   # Frontmatter validation, ID generation & index updates
+│   └── fresh_start.py                    # Archive current state and reset for a new session
 ├── .venv/                                # Python virtual environment (uv)
 ├── requirements.txt                      # Python dependencies (pydantic, pyyaml)
 ├── _index.md                             # Auto-maintained research index
@@ -245,6 +256,23 @@ The `parent` field is optional — include it only when a question follows up on
 | 1 | asker | initial survey | Generated 5 questions | 2026-02-25T14:30:00Z |
 | 2 | doer | Q-20260225-143022-731 | Created 2 notes | 2026-02-25T14:35:00Z |
 ```
+
+## Fresh Start
+
+When you want to begin a new research session from scratch — with different documents or objectives — run:
+
+```
+uv run scripts/fresh_start.py
+```
+
+The script:
+
+1. **Archives** the current `_index.md`, `PROGRESS.md`, `research-questions.md`, and everything in `notes/` into a timestamped zip file
+2. **Moves** the archive into the `archives/` directory
+3. **Clears** all files from `notes/` and `notes/questions/` (preserving the directories)
+4. **Resets** `_index.md`, `PROGRESS.md`, and `research-questions.md` to empty templates
+
+Previous archives are kept in `archives/` (e.g., `archives/ralph_notes_archive_20260228_150000.zip`) so you can always recover earlier work.
 
 ## Tips
 
