@@ -7,45 +7,46 @@ Inspired by the [Ralph Wiggum loop technique](https://ghuntley.com/ralph/): an A
 ## How It Works
 
 ```
-┌─────────────────────────────────────────────────┐
-│               Ralph Orchestrator                │
-│                                                 │
-│  1. Check PAUSE.md (stop if exists)             │
-│  2. Read state (_index.md, PROGRESS.md)         │
-│  3. Decide: Asker or Doer?                      │
-│  4. Dispatch subagent via runSubagent           │
-│  5. Verify results, update PROGRESS.md          │
-│  6. Repeat                                      │
-└────────────┬──────────────┬─────────────────────┘
-             │              │
-     ┌───────▼──────┐ ┌────▼───────┐
-     │    Asker     │ │    Doer    │
-     │              │ │            │
-     │ Reads docs/  │ │ Reads docs/│
-     │ Generates    │ │ Answers a  │
-     │ research     │ │ question   │
-     │ questions    │ │ with notes │
-     └──────┬───────┘ └─────┬──────┘
-            │               │
-            ▼               ▼
-        notes/q-*.md    notes/*.md
-            │               │
-     ┌──────▼───────────────▼──────┐
-     │   scripts/update_index.py   │
-     │  • Validates frontmatter    │
-     │  • Generates unique ID      │
-     │  • Sets created timestamp   │
-     │  • Updates _index.md        │
-     │  • Marks questions answered │
-     └─────────────────────────────┘
+┌─────────────────────────────────────────────────────┐
+│                 Ralph Orchestrator                   │
+│                                                     │
+│  1. Check PAUSE.md (stop if exists)                 │
+│  2. Read state (_index.md, PROGRESS.md)             │
+│  3. Decide: Asker, Doer, and/or Connector?          │
+│  4. Dispatch subagents via runSubagent              │
+│  5. Verify results, update PROGRESS.md              │
+│  6. Repeat                                          │
+└──────┬──────────────┬──────────────┬────────────────┘
+       │              │              │
+┌──────▼──────┐ ┌─────▼──────┐ ┌────▼─────────┐
+│    Asker    │ │    Doer    │ │  Connector   │
+│             │ │            │ │              │
+│ Reads docs/ │ │ Reads docs/│ │ Reads notes/ │
+│ Generates   │ │ Answers a  │ │ Adds inline  │
+│ research    │ │ question   │ │ [[wikilinks]]│
+│ questions   │ │ with notes │ │ between notes│
+└──────┬──────┘ └─────┬──────┘ └──────┬───────┘
+       │              │               │
+       ▼              ▼               │
+   notes/q-*.md   notes/*.md     edits notes/
+       │              │
+┌──────▼──────────────▼──────┐
+│   scripts/update_index.py  │
+│  • Validates frontmatter   │
+│  • Generates unique ID     │
+│  • Sets created timestamp  │
+│  • Updates _index.md       │
+│  • Marks questions answered│
+└────────────────────────────┘
 ```
 
-**Two subagent types alternate:**
+**Three subagent types work together:**
 
 - **Askers** survey the documents and research objectives, then generate specific, answerable research questions
 - **Doers** pick up an open question, read the source documents, and produce atomic notes that answer it
+- **Connectors** read a random batch of existing notes, find conceptual relationships, and weave inline `[[wikilinks]]` to create a densely connected knowledge graph
 
-After creating each file, agents call `scripts/update_index.py` to handle all bookkeeping deterministically — frontmatter validation, ID generation, timestamps, index updates, and question status tracking.
+After creating each file, Askers and Doers call `scripts/update_index.py` to handle all bookkeeping deterministically — frontmatter validation, ID generation, timestamps, index updates, and question status tracking. Connectors only edit existing notes and do not create new files.
 
 ## Requirements
 
@@ -135,8 +136,9 @@ ralph-notes/
 ├── .github/
 │   ├── agents/
 │   │   ├── ralph-asker.agent.md           # Asker subagent — generates research questions
+│   │   ├── ralph-connector.agent.md       # Connector subagent — adds wikilinks between notes
 │   │   ├── ralph-doer.agent.md            # Doer subagent — creates atomic notes
-│   │   └── ralph-orchestrator.agent.md    # Orchestrator — dispatches Askers and Doers
+│   │   └── ralph-orchestrator.agent.md    # Orchestrator — dispatches subagents
 │   └── copilot-instructions.md           # Project-wide AI instructions
 ├── docs/                                 # Source documents (READ ONLY)
 ├── notes/                                # Generated notes & questions (WRITE)
@@ -286,7 +288,7 @@ Previous archives are kept in `archives/` (e.g., `archives/ralph_notes_archive_2
 
 | Problem | Solution |
 |---------|----------|
-| Agent not appearing | Check that `.github/agents/ralph-orchestrator.agent.md` (and `ralph-asker.agent.md`, `ralph-doer.agent.md`) exist and VS Code has reloaded. |
+| Agent not appearing | Check that `.github/agents/ralph-orchestrator.agent.md` (and `ralph-asker.agent.md`, `ralph-doer.agent.md`, `ralph-connector.agent.md`) exist and VS Code has reloaded. |
 | `PLACEHOLDER` not replaced | The agent must call `scripts/update_index.py` after creating the file. Check the agent instructions. |
 | Validation error from script | Read the error output — Pydantic reports exactly which field failed and why. Fix the frontmatter and re-run the script. |
 | `ModuleNotFoundError` | Run `uv pip install -r requirements.txt` from the workspace root to install dependencies into `.venv/`. |
