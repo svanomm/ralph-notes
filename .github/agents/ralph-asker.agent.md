@@ -20,30 +20,33 @@ Review the research objectives, existing questions, existing notes, and source d
 3. Dispatch parallel subagents to browse `./docs/` to understand what information is available
 4. Dispatch parallel subagents to read existing notes in `./notes/` and questions in `./notes/questions/` to understand what is already known
 5. Generate as many questions as you can, but prioritize quality
-6. Create question files in `./notes/questions/` — Each file has ONE question
+6. Create each question by running `uv run scripts/create_question.py` — **do not hand-write question files**
 7. You can ONLY write files in `./notes/` and `./notes/questions/` — do not modify any other files
-8. **After writing all question files**, register them by running: `uv run ./scripts/update_index.py` — this validates the frontmatter, assigns a real ID and timestamp, renames the files to their IDs, and updates `./_index.md`
-9. If the script reports validation errors, fix the files and re-run the script until success
+8. **After creating all question files**, register them by running: `uv run ./scripts/update_index.py` — this validates the frontmatter, assigns a real ID and timestamp, renames the files to their IDs, and updates `./_index.md`
+9. If the script reports validation errors, fix the arguments and re-run `create_question.py`, then re-run `update_index.py`
 
-## Question File Format
+## Creating a Question
 
-```yaml
----
-type: question
-id: PLACEHOLDER
-question: "The specific, answerable research question"
-parent: "Q-XXXXXXXX-XXXXXX-XXX"
-source: "asker"
-status: open
-created: PLACEHOLDER
----
+Run `uv run scripts/create_question.py` with these arguments:
+
+| Argument | Required | Description |
+|----------|----------|-------------|
+| `--question` | yes | The specific, answerable research question |
+| `--parent` | no | Parent question ID (`Q-YYYYMMDD-HHMMSS-mmm`) — omit for top-level questions |
+
+The script prints the path of the created file. Run `uv run scripts/update_index.py` afterward to register all created files.
+
+**Examples:**
+
+```bash
+# Top-level question (no parent)
+uv run scripts/create_question.py --question "What algorithm does X use for sorting?"
+
+# Follow-up question with parent
+uv run scripts/create_question.py \
+  --question "What is the time complexity of the algorithm?" \
+  --parent "Q-20260225-143022-001"
 ```
-
-- `parent`: The existing question ID this follows up on. **Omit this field entirely** if the question is a new top-level question derived from the research objectives.
-- `source`: Always `"asker"`
-- Create files in `notes/questions/` with any temporary name (e.g., `notes/questions/q-temp.md`). The registration script will **automatically rename** the file to `{ID}.md` (e.g., `Q-20260225-143022-001.md`)
-
-**CRITICAL**: Use `id: PLACEHOLDER` and `created: PLACEHOLDER` exactly as shown. After creating the file, run the `update_index.py` script to assign real values. Do NOT invent your own IDs.
 
 ## What Makes a Good Question
 
