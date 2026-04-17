@@ -22,13 +22,11 @@ You have been given a question ID and its text. Find the answer in the source do
 ## Rules
 
 1. Read `./_index.md` to confirm the question you've been assigned
-2. Dispatch parallel subagents to browse `./docs/` for relevant information
+2. Dispatch subagents to browse `./docs/` for relevant information
 3. Create ONE note file per distinct atomic insight (do not combine unrelated ideas)
-4. Create each note by running `uv run scripts/create_note.py` with the appropriate arguments — **do not hand-write note files**
-5. You can ONLY write files in `./notes/` — do not modify any other files
-6. **After creating all note files**, register them by running: `uv run ./scripts/update_index.py` — this validates the frontmatter, assigns a real ID and timestamp, renames the file to its ID, and updates `./_index.md`
-7. If the script reports validation errors, fix the arguments and re-run `create_note.py`, then re-run `update_index.py`
-8. When referencing other notes in `--related`, use their **file ID**: `NOTE-XXXXXXXX-XXXXXX-XXX`. Confirm the ID exists in `./_index.md` before referencing it
+4. Create each note by running `uv run scripts/create_note.py` with the appropriate arguments — **do not hand-write note files**. The script validates the frontmatter, assigns a real ID and timestamp, renames the file to its ID, and updates `./_index.md` automatically.
+5. If the script reports validation errors, fix the arguments and re-run `create_note.py`
+6. When referencing other notes in `--related`, use their **file ID**: `NOTE-XXXXXXXX-XXXXXX-XXX`. Confirm the ID exists in `./_index.md` before referencing it
 
 ## Creating a Note
 
@@ -43,7 +41,7 @@ Run `uv run scripts/create_note.py` with these arguments:
 | `--body` | yes | Note body: 1–3 paragraphs expressing a single atomic insight |
 | `--related` | no | Repeatable: `--related "NOTE-ID"` or `--related "NOTE-ID: description"` |
 
-The script prints the path of the created file. Run `uv run scripts/update_index.py` afterward to register it.
+The script prints the assigned ID, final file path, and timestamp.
 
 **Example:**
 

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Create a new note file in notes/ with correct frontmatter structure.
+"""Create a new note file in notes/ and immediately register it in _index.md.
 
 Usage:
     uv run scripts/create_note.py --title "..." --answers "Q-..." --source "docs/..." --tags "tag1,tag2" --body "..."
@@ -12,6 +12,9 @@ Options:
     --body        Note body text (1–3 paragraphs)
     --related     Related note with optional description, repeatable:
                   --related "NOTE-ID" or --related "NOTE-ID: description"
+
+The script writes the note, assigns a real ID and timestamp, renames the file to
+its ID, and updates _index.md — all in one step.
 """
 
 from __future__ import annotations
@@ -25,6 +28,7 @@ from pydantic import ValidationError
 
 sys.path.insert(0, str(Path(__file__).parent))
 from models import NoteFrontmatter  # noqa: E402
+from update_index import process_file  # noqa: E402
 
 WORKSPACE = Path(__file__).resolve().parent.parent
 
@@ -103,7 +107,10 @@ def main() -> int:
     file_path = notes_dir / f"temp-{uuid.uuid4().hex[:8]}.md"
     file_path.write_text(content, encoding="utf-8")
 
-    print(str(file_path))
+    result = process_file(file_path)
+    if result is None:
+        return 1
+    entry_id, new_path, timestamp = result
     return 0
 
 
