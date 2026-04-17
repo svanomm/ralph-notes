@@ -3,6 +3,12 @@ name: ralph-connector
 description: "Ralph Note connector — finds conceptual links between notes and adds inline wikilinks"
 tools: [execute/getTerminalOutput, execute/runInTerminal, read/readFile, edit/editFiles, search/fileSearch, search/listDirectory, search/textSearch]
 model: Claude Haiku 4.5 (copilot)
+hooks:
+  PreToolUse:
+    - type: command
+      windows: "powershell -ExecutionPolicy Bypass -File .github/hooks/validate-terminal-command.ps1"
+      env:
+        RALPH_AGENT: "connector"
 ---
 
 # Ralph Connector

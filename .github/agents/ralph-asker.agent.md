@@ -1,8 +1,14 @@
 ---
 name: ralph-asker
 description: "Ralph Note asker — surveys documents and generates specific, answerable research questions"
-tools: [agent, search/fileSearch, search/listDirectory, search/searchResults, search/textSearch, execute/getTerminalOutput, execute/runInTerminal]
+tools: [agent, search/fileSearch, search/listDirectory, search/textSearch, execute/getTerminalOutput, execute/runInTerminal]
 model: Claude Sonnet 4.6 (copilot)
+hooks:
+  PreToolUse:
+    - type: command
+      windows: "powershell -ExecutionPolicy Bypass -File .github/hooks/validate-terminal-command.ps1"
+      env:
+        RALPH_AGENT: "asker"
 ---
 
 # Ralph Asker
