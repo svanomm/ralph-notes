@@ -1,7 +1,7 @@
 ---
 name: ralph-doer
 description: "Ralph Note doer — answers research questions by reading source documents and creating atomic Zettelkasten notes"
-tools: [execute/getTerminalOutput, execute/runInTerminal, read/readFile, agent, search/codebase, search/fileSearch, search/listDirectory, search/searchResults, search/textSearch]
+tools: [execute/getTerminalOutput, execute/runInTerminal, read/readFile, agent, search/codebase, search/fileSearch, search/listDirectory, search/textSearch]
 model: Claude Haiku 4.5 (copilot)
 ---
 

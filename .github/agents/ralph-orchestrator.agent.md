@@ -1,8 +1,8 @@
 ---
 name: Ralph Orchestrator
 description: "Ralph Note orchestrator — iteratively explores documents and builds a Zettelkasten knowledge base"
-tools: [read/readFile, agent, edit/editFiles, search/fileSearch, search/listDirectory]
-model: Claude Opus 4.6 (copilot)
+tools: [vscode/askQuestions, read/readFile, agent, edit/editFiles, search/fileSearch, search/listDirectory]
+model: Claude Sonnet 4.6 (copilot)
 ---
 
 # Ralph Note Orchestrator
@@ -81,9 +81,9 @@ Based on the current state, dispatch **Asker** and/or **Doer** subagents.
 
 Use `#tool:agent` to dispatch Askers or Doers by specifying their agent name:
 
-- **For Doers**: Use agent name `ralph-doer`. Include the question ID to answer and the question text in your prompt.
-- **For Askers**: Use agent name `ralph-asker`. Include which documents or areas to explore, what coverage gaps exist, and what the open questions are in your prompt.
-- **For Connectors**: Use agent name `ralph-connector`. No special context is needed — each connector self-assigns its own random batch of notes. Simply dispatch them with a short prompt like: "Find and add meaningful inline wikilinks between your assigned notes and the rest of the knowledge base."
+- **For Doers**: Use agent `ralph-doer`. Include the question ID to answer and the question text in your prompt.
+- **For Askers**: Use agent `ralph-asker`. Include which documents or areas to explore, what coverage gaps exist, and what the open questions are in your prompt.
+- **For Connectors**: Use agent `ralph-connector`. No special context is needed — each connector self-assigns its own random batch of notes. Simply dispatch them with a short prompt like: "Find and add meaningful inline wikilinks between your assigned notes and the rest of the knowledge base."
 
 The subagents have their own agent definitions with full instructions — you only need to provide the dynamic context for each dispatch.
 
@@ -106,13 +106,12 @@ Append the iteration result to the history table in `./PROGRESS.md`:
 
 Update the current-state section with the new counts of open questions and total notes.
 
-### Step 6 — Repeat
+### Step 6 — Confirm Next Iteration
 
-Go back to Step 0. Continue until the user manually stops you or there are truly no questions left to answer.
+Use `#tool:vscode/askQuestions` to ask the user if they want to continue to the next iteration. If they say "yes", repeat from Step 1. If they say "no", output a message that the loop is stopping and end.
 
 ---
 
 ## Subagent Reference
 
 When dispatching a subagent, provide a prompt containing the dynamic context (question ID, exploration area, coverage gaps, etc.). The agent definitions contain the full role instructions — you do not need to repeat them.
-

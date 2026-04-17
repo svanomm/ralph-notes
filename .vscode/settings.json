@@ -1,6 +1,21 @@
 {
+    "chat.useCustomAgentHooks": true,
     "chat.tools.terminal.autoApprove": {
-      "uv run scripts/update_index.py": true,
-      "uv run python ./scripts/update_index.py": true
-    }
+        "uv run scripts/update_index.py": true,
+        "uv run python ./scripts/update_index.py": true,
+        "uv run -m utils.chunk_query context": true,
+        "uv run python -m utils.chunk_query context": true,
+        "uv run utils/chunk_query.py context": true,
+        "uv run python utils/chunk_query.py context": true,
+        
+        "uv run -m utils.search": true,
+        "uv run python -m utils.search": true,
+        "uv run python ./utils/search.py": true,
+        "uv run python utils/search.py": true,
+        "uv run pytest": true,
+        "uv run ruff": true,
+    },
+    "chat.agent.maxRequests": 9999,
+    "chat.editor.wordWrap": "on",
+    "chat.experimental.useSkillAdherencePrompt": false,
 }
