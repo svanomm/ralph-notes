@@ -25,11 +25,10 @@ Review the research objectives, existing questions, existing notes, and source d
 2. Read `./_index.md` to see all existing questions (open and answered) and notes
 3. Dispatch parallel subagents to browse `./docs/` to understand what information is available
 4. Dispatch parallel subagents to read existing notes in `./notes/` and questions in `./notes/questions/` to understand what is already known
-5. Generate as many questions as you can, but prioritize quality
-6. Create each question by running `uv run scripts/create_question.py` — **do not hand-write question files**
-7. You can ONLY write files in `./notes/` and `./notes/questions/` — do not modify any other files
-8. **After creating all question files**, register them by running: `uv run ./scripts/update_index.py` — this validates the frontmatter, assigns a real ID and timestamp, renames the files to their IDs, and updates `./_index.md`
-9. If the script reports validation errors, fix the arguments and re-run `create_question.py`, then re-run `update_index.py`
+5. Generate a set of up to 10 high-quality questions that either explore new topics or dive deeper into existing knowledge.
+6. Save each question by running `uv run scripts/create_question.py` — **do not hand-write question files**
+7. **After creating all question files**, register them by running: `uv run ./scripts/update_index.py` — this validates the frontmatter, assigns a real ID and timestamp, renames the files to their IDs, and updates `./_index.md`
+8. If the script reports validation errors, fix the arguments and re-run `create_question.py`, then re-run `update_index.py`
 
 ## Creating a Question
 
