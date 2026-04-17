@@ -64,6 +64,20 @@ if ($hookInput.tool_input.PSObject.Properties['command']) {
     $command = $hookInput.tool_input.command
 }
 
+# ── Block command chaining / shell metacharacters ─────────────────────
+# Catches ;  &&  ||  |  newlines  $()  backtick-escapes and & (call operator mid-command)
+$chainPattern = ';|&&|\|\||(?<!\A)\||\r|\n|`|\$\(|&\s'
+if ($command -match $chainPattern) {
+    @{
+        hookSpecificOutput = @{
+            hookEventName            = 'PreToolUse'
+            permissionDecision       = 'deny'
+            permissionDecisionReason = "Chained or compound commands are not permitted. Submit a single allowed command."
+        }
+    } | ConvertTo-Json -Depth 3 -Compress | Write-Output
+    exit 0
+}
+
 # ── Match against allowed patterns ────────────────────────────────────
 $patterns  = $allowedPatterns[$agent]
 $isAllowed = $false
