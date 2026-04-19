@@ -1,18 +1,12 @@
 ---
-name: research-planner
+name: create-plan
 description: "Populate research-questions.md with an initial research plan. Use when: setting up research goals, defining research questions, planning what to investigate, filling in research objectives, starting a new Ralph Note session, or when research-questions.md is empty or needs to be written. Conducts an inquisitive interview from general to specific, then writes a comprehensive research plan into research-questions.md."
-argument-hint: "Optional topic hint (e.g. 'antitrust DiD analysis')"
+tools: vscode/askQuestions, read/readFile, edit/createFile, edit/editFiles, search/fileSearch, search/listDirectory, search/textSearch 
 ---
 
 # Research Planner
 
 Conduct a progressive interview with the user to understand their research goals, then write a comprehensive `research-questions.md`.
-
-## When to Use
-- `research-questions.md` is blank or under-populated
-- User wants to define or refocus their research agenda
-- Starting a new Ralph Note investigation session
-- User says "plan my research", "set up research questions", "what should I study"
 
 ## Procedure
 
@@ -20,7 +14,7 @@ Conduct a progressive interview with the user to understand their research goals
 Read `docs/` to understand what material is available. List the documents briefly so the user knows what the corpus covers.
 
 ### Step 2 — Interview: General Questions (ask these first)
-Ask **one or two questions at a time** — never a long list. Wait for answers before proceeding.
+Ask **one or two questions at a time** — never a long list. Wait for answers before proceeding. Use the `vscode/askQuestions` tool to ask these questions in the VSCode UI.
 
 **Round 1 — Purpose & Context**
 - What is the broad topic or problem you are trying to understand?

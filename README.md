@@ -82,15 +82,15 @@ docs/
 
 You can define your research objectives in two ways:
 
-**Option A — Use the research-planner skill (recommended)**
+**Option A — Use the create-plan prompt (recommended)**
 
 Open GitHub Copilot Chat and type:
 
 ```
-Plan my research
+/create-plan
 ```
 
-The `research-planner` skill will interview you — starting with broad questions about purpose and context, then narrowing to specific hypotheses and scope boundaries. After a short back-and-forth, it writes a complete `research-questions.md` tailored to your goals and the documents in `docs/`.
+Copilot will then interview you — starting with broad questions about purpose and context, then narrowing to specific hypotheses and scope boundaries. After a short back-and-forth, it writes a complete `research-questions.md` tailored to your goals and the documents in `docs/`.
 
 **Option B — Edit `research-questions.md` directly**
 
@@ -180,24 +180,6 @@ ralph-notes/
 | `PROGRESS.md` | Orchestrator only | Loop state tracking, written by the orchestrator |
 | `research-questions.md` | Human only | You define the research goals before starting |
 | `scripts/` | Do not modify | Index update script and utilities |
-
-## Index Update Script
-
-Agents call `scripts/update_index.py` after creating files:
-
-```
-uv run scripts/update_index.py notes/<filename>.md
-```
-
-The script performs these steps:
-
-1. Parses and **validates** the YAML frontmatter using Pydantic models (enforces correct types, required fields, ID formats, and value constraints)
-2. Generates a unique ID with millisecond precision (e.g., `NOTE-20260225-143022-731` or `Q-20260225-143055-412`)
-3. Replaces `id: PLACEHOLDER` and `created: PLACEHOLDER` with real values
-4. Appends an entry to the appropriate table in `_index.md`
-5. If a note references a question via `answers:`, marks that question as "answered" in the index
-
-If validation fails, the script prints a clear error and exits non-zero so the agent can fix the file.
 
 ## Note Format
 
