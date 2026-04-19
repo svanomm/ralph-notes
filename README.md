@@ -1,10 +1,10 @@
 # Ralph Note
 
-An iterative knowledge extraction system powered by VS Code Copilot agents. Ralph Note explores Markdown documents and builds a database of atomic [Zettelkasten](https://zettelkasten.de/overview/)-style notes — automatically, loop after loop.
+An iterative knowledge extraction system powered by VS Code Copilot agents. Ralph Note explores Markdown documents and builds a database of atomic [Zettelkasten](https://zettelkasten.de/overview/)-style notes — automatically, loop after loop. Related notes are linked together to build a knowledge graph.
 
 Inspired by the [Ralph Wiggum loop technique](https://ghuntley.com/ralph/): an AI orchestrator dispatches disposable subagents to explore source material, generate research questions, and distill findings into atomic notes. Each subagent starts with a fresh context window, avoiding the bloat that kills long-running AI sessions.
 
-**Warning**: Please use this tool at your own risk. I highly recommend implementing a sandbox to prevent agents from behaving badly. I personally use [Docker Sandboxes](https://docs.docker.com/ai/sandboxes/agents/copilot/) to ensure agents cannot interact with files outside of the repo.
+**Warning**: Please use this tool at your own risk. We use agent-scoped hooks to prevent agents from running arbitrary code in the temrinal, but I highly recommend implementing an agent sandbox for additional protection. I personally use [Docker Sandboxes](https://docs.docker.com/ai/sandboxes/agents/copilot/) to ensure agents cannot interact with files outside of the repo.
 
 ## How It Works
 
@@ -128,6 +128,8 @@ Open GitHub Copilot Chat (`Ctrl+Shift+I`) and type:
 ```
 
 The orchestrator will start iterating — generating questions, reading documents, and producing notes.
+
+NOTE: to avoid abusing GitHub Copilot premium requests, the current system stops after each iteration, i.e. 1 premium request equals 1 iteration. You could remove this restriction and have the orchestrator keep iterating forever, but you may get rate-limited (or worse).
 
 ### 6. Stop the loop
 
@@ -283,7 +285,7 @@ Previous archives are kept in `archives/` (e.g., `archives/ralph_notes_archive_2
 
 ## Tips
 
-- **Start small**: Begin with a few focused documents and 2–3 primary questions. The asker subagent will naturally expand the question pool.
+- **Start small**: Begin with a few focused documents and 2–3 primary questions. The asker subagents will naturally expand the question pool over time.
 - **Check the index**: Open `_index.md` at any time to see the current state of research — which questions are open, which are answered, and all notes created.
 - **Quality over quantity**: The orchestrator prioritizes depth. It generates 3–5 questions per asker session and creates one note per atomic insight.
 - **Resume anytime**: The loop state is fully captured in `_index.md` and `PROGRESS.md`. Delete `PAUSE.md` and re-invoke the orchestrator to continue where you left off.
