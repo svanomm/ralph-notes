@@ -9,6 +9,14 @@
         "uv run scripts/validate_references.py": true,
         "uv run pytest": true,
         "uv run ruff": true,
+        "/^uv run \\./scripts/assign_note_batch\\.py$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "/^uv run \\.\\\\scripts\\\\assign_note_batch\\.py$/": {
+            "approve": true,
+            "matchCommandLine": true
+        }
     },
     "chat.agent.maxRequests": 9999,
     "chat.editor.wordWrap": "on",

@@ -85,3 +85,4 @@ target element entirely, returning a false negative.
 - **Sourceable**: Always reference the specific source document.
 - **Useful**: Your notes should be independently understandable without reading the full source.
 - **Body content**: 1–3 paragraphs expressing a SINGLE atomic insight; include direct quotes where appropriate (with page/section references).
+- **Formatting**: if you include formulas, use LaTeX syntax and wrap them in double dollar signs (`$$`) for proper rendering in markdown.

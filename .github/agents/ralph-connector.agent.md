@@ -25,7 +25,7 @@ You will be assigned a small random batch of notes. Read them carefully, identif
 Run the assignment script to receive your work order:
 
 ```
-uv run ./scripts/assign_note_batch.py
+uv run scripts/assign_note_batch.py
 ```
 
 This prints the relative filepaths of 3 randomly-selected registered notes. These are the notes you will enrich with links.
@@ -50,15 +50,11 @@ Read the candidate notes you identified. Confirm whether a genuine conceptual li
 
 ### Step 5 — Add Inline Wikilinks
 
-Edit your assigned notes to add `[[NOTE-ID]]` wikilinks **inline within the note body text**, at the point where the linked concept is most relevant. The link should feel like a natural cross-reference.
+Edit your assigned notes to add `([[NOTE-ID]])` wikilink cites **inline within the note body text**, at the point where the linked concept is most relevant. The link should feel like a natural cross-reference.
 
 **Good inline linking:**
 
-> Difference-in-differences relies on the parallel trends assumption [[NOTE-20260225-150000-001]], which can be tested using pre-treatment data [[NOTE-20260225-150000-002]].
-
-**Bad inline linking (do NOT do this):**
-
-> This note discusses econometrics. [[NOTE-20260225-150000-001]] [[NOTE-20260225-150000-002]] [[NOTE-20260225-150000-003]]
+> Difference-in-differences relies on the parallel trends assumption ([[NOTE-20260225-150000-001]]), which can be tested using pre-treatment data ([[NOTE-20260225-150000-002]]).
 
 ### Step 6 — Update the Related Section
 
