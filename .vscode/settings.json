@@ -11,5 +11,6 @@
     },
     "chat.agent.maxRequests": 9999,
     "chat.editor.wordWrap": "on",
-    "chat.experimental.useSkillAdherencePrompt": false,
+    "chat.agent.sandbox.enabled": "on",
+    "github.copilot.chat.updated53CodexPrompt.enabled": true
 }
