@@ -52,6 +52,8 @@ All subagent types are able to run as parallel fleets of subagents, allowing for
 
 After creating each file, Askers and Doers call `scripts/update_index.py` to handle all bookkeeping deterministically — frontmatter validation, ID generation, timestamps, index updates, and question status tracking. Connectors only edit existing notes and do not create new files.
 
+The orchestrator updates `PROGRESS.md` programmatically by running `scripts/update_progress.py`, which computes state counts from `_index.md` and appends one validated iteration row.
+
 ## Requirements
 
 - **VS Code** with GitHub Copilot Chat (agent mode)
@@ -162,6 +164,7 @@ ralph-notes/
 ├── notes/                                # Generated notes & questions (WRITE)
 ├── scripts/
 │   ├── update_index.py                   # Frontmatter validation, ID generation & index updates
+│   ├── update_progress.py                # Deterministic PROGRESS.md updater for orchestrator iterations
 │   └── fresh_start.py                    # Archive current state and reset for a new session
 ├── .venv/                                # Python virtual environment (uv)
 ├── requirements.txt                      # Python dependencies (pydantic, pyyaml)
@@ -236,7 +239,13 @@ created: PLACEHOLDER
 
 ## Progress Tracking
 
-`PROGRESS.md` records the orchestrator's loop state, updated after every iteration:
+`PROGRESS.md` records the orchestrator's loop state, updated after every iteration via:
+
+```
+uv run scripts/update_progress.py --type "..." --target "..." --result "..."
+```
+
+The script computes open-question and total-note counts from `_index.md`, updates the Current State fields, and appends exactly one row to Iteration History.
 
 ```markdown
 ## Current State

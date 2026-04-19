@@ -2,6 +2,7 @@
     "chat.useCustomAgentHooks": true,
     "chat.tools.terminal.autoApprove": {
         "uv run scripts/update_index.py": true,
+        "uv run scripts/update_progress.py": true,
         "uv run scripts/assign_note_batch.py": true,
         "uv run scripts/create_note.py": true,
         "uv run scripts/create_question.py": true,

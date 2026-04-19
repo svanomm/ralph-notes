@@ -1,7 +1,12 @@
 ---
 name: Ralph Orchestrator
 description: "Ralph Note orchestrator — iteratively explores documents and builds a Zettelkasten knowledge base"
-tools: [vscode/askQuestions, read/readFile, agent, edit/editFiles, search/fileSearch, search/listDirectory]
+tools: [vscode/askQuestions, read/readFile, agent, search/fileSearch, search/listDirectory, execute/getTerminalOutput, execute/runInTerminal]
+hooks:
+  PreToolUse:
+    - type: command
+      command: 'pwsh -NoProfile -File ./.github/hooks/ralph-orchestrator-terminal-policy.ps1'
+      windows: 'powershell -NoProfile -ExecutionPolicy Bypass -File ".github\hooks\ralph-orchestrator-terminal-policy.ps1"'
 model: Claude Sonnet 4.6 (copilot)
 ---
 
@@ -31,9 +36,9 @@ Given a repository of Markdown documents in `./docs/` and research objectives in
 ## Safety Rules
 
 - You must NEVER create note or question files yourself — always use `#tool:agent`
-- You can ONLY write to `./PROGRESS.md`
+- You can ONLY update `./PROGRESS.md` by running `uv run scripts/update_progress.py` — never hand-edit the file
 - `./_index.md` is READ ONLY for you — subagents update it by calling `./scripts/update_index.py`
-- Terminal commands are BLOCKED — do not attempt them
+- Terminal commands are restricted to `uv run scripts/update_progress.py`; all other terminal commands are blocked
 - If `./PAUSE.md` exists in the workspace root, STOP and tell the user the loop is paused
 
 ---
@@ -93,18 +98,26 @@ After the subagent returns:
 
 1. Re-read `./_index.md` (it should have been updated by the subagent calling `update_index.py`)
 2. Check if new questions or notes appeared
-3. If the subagent reported a failure, note it in `./PROGRESS.md`
+3. If the subagent reported a failure, include that failure summary in your Step 5 `update_progress.py` command
 
 ### Step 5 — Update PROGRESS.md
 
-Append the iteration result to the history table in `./PROGRESS.md`:
+Run the progress updater script instead of editing `./PROGRESS.md` directly:
 
-- Iteration number
-- Agent type dispatched (asker / doer / connector)
-- Target (question ID or exploration area)
-- Result summary (notes created, questions generated, or failure)
+```bash
+uv run scripts/update_progress.py \
+	--type "asker/doer" \
+	--target "Q-YYYYMMDD-HHMMSS-mmm" \
+	--result "Short iteration summary" \
+	--status Active
+```
 
-Update the current-state section with the new counts of open questions and total notes.
+Rules for this step:
+
+- `--type` should reflect the subagent mix dispatched this iteration (for example: `asker`, `doer`, `connector`, or `asker/doer`)
+- `--target` should identify the primary question ID, note ID, or exploration scope
+- `--result` should summarize outcomes (created notes/questions, link edits, or failure)
+- Do not compute open-question or total-note counts manually; the script computes them from `./_index.md`
 
 ### Step 6 — Confirm Next Iteration
 
