@@ -27,15 +27,16 @@ def find_registered_notes() -> list[Path]:
     if not NOTES_DIR.exists():
         return []
     return sorted(
-        f for f in NOTES_DIR.iterdir()
-        if f.is_file() and _NOTE_ID_RE.match(f.name)
+        f for f in NOTES_DIR.iterdir() if f.is_file() and _NOTE_ID_RE.match(f.name)
     )
 
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="Assign a random batch of notes.")
     parser.add_argument(
-        "--size", type=int, default=3,
+        "--size",
+        type=int,
+        default=3,
         help="Number of notes to select (default: 3)",
     )
     args = parser.parse_args()

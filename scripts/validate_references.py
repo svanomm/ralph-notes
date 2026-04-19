@@ -52,6 +52,7 @@ def fix_broken_references(files: list[Path], id_to_file: dict[str, Path]) -> int
     fixed = 0
     for fpath in files:
         text = fpath.read_text(encoding="utf-8")
+
         def _replace(m: re.Match) -> str:
             nonlocal fixed
             ref_id = m.group(1)
@@ -59,6 +60,7 @@ def fix_broken_references(files: list[Path], id_to_file: dict[str, Path]) -> int
                 fixed += 1
                 return ""  # remove the broken wikilink
             return m.group(0)
+
         new_text = WIKILINK_RE.sub(_replace, text)
         if new_text != text:
             fpath.write_text(new_text, encoding="utf-8")
@@ -66,8 +68,12 @@ def fix_broken_references(files: list[Path], id_to_file: dict[str, Path]) -> int
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Validate wikilink references in Ralph Note files.")
-    parser.add_argument("--fix", action="store_true", help="Remove broken wikilink references")
+    parser = argparse.ArgumentParser(
+        description="Validate wikilink references in Ralph Note files."
+    )
+    parser.add_argument(
+        "--fix", action="store_true", help="Remove broken wikilink references"
+    )
     args = parser.parse_args()
 
     files = collect_files()
@@ -84,7 +90,9 @@ def main() -> int:
         text = fpath.read_text(encoding="utf-8")
         fm = parse_frontmatter(text)
         if fm is None:
-            errors.append(f"  {fpath.relative_to(WORKSPACE)}: missing or invalid frontmatter")
+            errors.append(
+                f"  {fpath.relative_to(WORKSPACE)}: missing or invalid frontmatter"
+            )
             continue
 
         entry_id = fm.get("id")
@@ -154,8 +162,10 @@ def main() -> int:
             print()
 
     if not has_errors:
-        print(f"All clear: {len(id_to_file)} files validated, "
-              f"all filenames match IDs, all references resolve.")
+        print(
+            f"All clear: {len(id_to_file)} files validated, "
+            f"all filenames match IDs, all references resolve."
+        )
         return 0
 
     total = len(errors) + len(filename_errors) + len(ref_errors)

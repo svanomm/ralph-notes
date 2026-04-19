@@ -104,7 +104,9 @@ def _sanitize_cell(value: str, name: str, min_len: int, max_len: int) -> str:
     return cleaned
 
 
-def _parse_history(lines: list[str], history_start: int, history_end: int) -> tuple[int, int]:
+def _parse_history(
+    lines: list[str], history_start: int, history_end: int
+) -> tuple[int, int]:
     header_idx = -1
     for i in range(history_start + 1, history_end):
         if lines[i].strip() == "| # | Type | Target | Result | Timestamp |":
@@ -142,7 +144,9 @@ def _parse_history(lines: list[str], history_start: int, history_end: int) -> tu
     return max_iteration + 1, insert_idx
 
 
-def _replace_state_line(lines: list[str], state_start: int, state_end: int, label: str, value: str) -> None:
+def _replace_state_line(
+    lines: list[str], state_start: int, state_end: int, label: str, value: str
+) -> None:
     prefix = f"- **{label}**:"
     for i in range(state_start + 1, state_end):
         if lines[i].startswith(prefix):
@@ -158,10 +162,18 @@ def _atomic_write(path: Path, text: str) -> None:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Update PROGRESS.md from one iteration event.")
-    parser.add_argument("--type", required=True, help="Agent type(s), e.g. asker, doer, asker/doer")
-    parser.add_argument("--target", required=True, help="Question ID, note ID, or exploration area")
-    parser.add_argument("--result", required=True, help="Short summary of iteration outcome")
+    parser = argparse.ArgumentParser(
+        description="Update PROGRESS.md from one iteration event."
+    )
+    parser.add_argument(
+        "--type", required=True, help="Agent type(s), e.g. asker, doer, asker/doer"
+    )
+    parser.add_argument(
+        "--target", required=True, help="Question ID, note ID, or exploration area"
+    )
+    parser.add_argument(
+        "--result", required=True, help="Short summary of iteration outcome"
+    )
     parser.add_argument(
         "--status",
         default="Active",
@@ -200,7 +212,9 @@ def main() -> int:
         if not PROGRESS_PATH.exists():
             raise ValueError(f"Missing file: {PROGRESS_PATH.name}")
 
-        open_questions, total_notes = _parse_index_counts(INDEX_PATH.read_text(encoding="utf-8"))
+        open_questions, total_notes = _parse_index_counts(
+            INDEX_PATH.read_text(encoding="utf-8")
+        )
 
         progress_text = PROGRESS_PATH.read_text(encoding="utf-8")
         lines = progress_text.splitlines()
@@ -211,9 +225,15 @@ def main() -> int:
         next_iteration, insert_idx = _parse_history(lines, history_start, history_end)
         timestamp = _utc_timestamp()
 
-        _replace_state_line(lines, state_start, state_end, "Iteration", str(next_iteration))
-        _replace_state_line(lines, state_start, state_end, "Open Questions", str(open_questions))
-        _replace_state_line(lines, state_start, state_end, "Total Notes", str(total_notes))
+        _replace_state_line(
+            lines, state_start, state_end, "Iteration", str(next_iteration)
+        )
+        _replace_state_line(
+            lines, state_start, state_end, "Open Questions", str(open_questions)
+        )
+        _replace_state_line(
+            lines, state_start, state_end, "Total Notes", str(total_notes)
+        )
         _replace_state_line(lines, state_start, state_end, "Last Action", last_action)
         _replace_state_line(lines, state_start, state_end, "Status", args.status)
 

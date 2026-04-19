@@ -43,7 +43,9 @@ def build_frontmatter(question: str, parent: str | None) -> str:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Create a question file in notes/questions/")
+    parser = argparse.ArgumentParser(
+        description="Create a question file in notes/questions/"
+    )
     parser.add_argument("--question", required=True, help="The research question")
     parser.add_argument(
         "--parent",

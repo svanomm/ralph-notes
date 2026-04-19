@@ -75,19 +75,17 @@ def update_index(
     content = index_path.read_text(encoding="utf-8")
 
     if entry_type == "question":
-        row = f'| [[{entry_id}]] | open | {data["question"]} | {data["source"]} | |'
+        row = f"| [[{entry_id}]] | open | {data['question']} | {data['source']} | |"
         content = content.replace(
             "<!-- END QUESTIONS -->", f"{row}\n<!-- END QUESTIONS -->"
         )
     else:
-        answers_link = f'[[{data.get("answers", "")}]]' if data.get("answers") else ""
+        answers_link = f"[[{data.get('answers', '')}]]" if data.get("answers") else ""
         row = (
-            f'| [[{entry_id}]] | {data["title"]} | {answers_link}'
-            f' | {data["source"]} | {timestamp} |'
+            f"| [[{entry_id}]] | {data['title']} | {answers_link}"
+            f" | {data['source']} | {timestamp} |"
         )
-        content = content.replace(
-            "<!-- END NOTES -->", f"{row}\n<!-- END NOTES -->"
-        )
+        content = content.replace("<!-- END NOTES -->", f"{row}\n<!-- END NOTES -->")
         # Mark the referenced question as answered
         answers = data.get("answers")
         if answers:

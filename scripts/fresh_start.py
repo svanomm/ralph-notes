@@ -112,7 +112,9 @@ def reset_files():
     """Reset _index.md, PROGRESS.md, and research-questions.md to fresh templates."""
     (ROOT / "_index.md").write_text(FRESH_INDEX, encoding="utf-8")
     (ROOT / "PROGRESS.md").write_text(FRESH_PROGRESS, encoding="utf-8")
-    (ROOT / "research-questions.md").write_text(FRESH_RESEARCH_QUESTIONS, encoding="utf-8")
+    (ROOT / "research-questions.md").write_text(
+        FRESH_RESEARCH_QUESTIONS, encoding="utf-8"
+    )
 
 
 def main():

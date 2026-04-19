@@ -67,8 +67,12 @@ def build_related_section(related: list[str]) -> str:
 def main() -> int:
     parser = argparse.ArgumentParser(description="Create a note file in notes/")
     parser.add_argument("--title", required=True, help="Brief title (max 10 words)")
-    parser.add_argument("--answers", required=True, help="Question ID this note answers")
-    parser.add_argument("--source", required=True, help="Source document path (docs/...)")
+    parser.add_argument(
+        "--answers", required=True, help="Question ID this note answers"
+    )
+    parser.add_argument(
+        "--source", required=True, help="Source document path (docs/...)"
+    )
     parser.add_argument("--tags", required=True, help="Comma-separated tags")
     parser.add_argument("--body", required=True, help="Note body text")
     parser.add_argument(
